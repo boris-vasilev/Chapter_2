@@ -1,0 +1,3 @@
+.nextflow*
+work/
+nf_driver_*.log

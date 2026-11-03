@@ -18,12 +18,13 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# matching.py lives with the pipeline that uses it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "nf_ldsc_permutation" / "bin"))
 from matching import (  # noqa: E402
     build_matcher, convergent_targets, load_coloc_genes, perm_rng,
 )
 
-DATA = Path(__file__).resolve().parents[2] / "data"
+DATA = Path(__file__).resolve().parents[3] / "data"
 STUDIES = {
     "AITD_Saevarsdottir_32581359_1": ("AITD", "gene_coord_hg38.txt",
                                       "gene_coord_protein_coding_hg38.txt"),

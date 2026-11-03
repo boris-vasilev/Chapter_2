@@ -34,7 +34,8 @@ import numpy as np  # noqa: E402
 import polars as pl  # noqa: E402
 from scipy.stats import ks_2samp  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# matching.py lives with the pipeline that uses it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "nf_ldsc_permutation" / "bin"))
 from matching import (  # noqa: E402
     build_matcher, convergent_regulators, convergent_targets,
     load_coloc_genes, perm_rng,

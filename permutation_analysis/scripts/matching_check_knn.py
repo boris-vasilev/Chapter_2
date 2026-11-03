@@ -28,6 +28,8 @@ from pathlib import Path
 import polars as pl
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+# matching.py lives with the pipeline that uses it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "nf_ldsc_permutation" / "bin"))
 from matching import (  # noqa: E402
     build_matcher, convergent_regulators, convergent_targets,
     load_coloc_genes, perm_rng,

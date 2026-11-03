@@ -11,17 +11,19 @@ The `old_*_first_n` columns restrict the pilot null to perm indices 1..N_new.
 `p_crosses_0.05` flags old and new empirical p on opposite sides of 0.05.
 
 Run after collect_permutation_ldsc.py:
-  uv run python scripts/compare_with_pilot.py --config config.yaml
+  uv run python scripts/archive/compare_with_pilot.py --config old_snakemake/config.yaml
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import polars as pl
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "nf_ldsc_permutation" / "bin"))
 from collect_permutation_ldsc import ANNOTS, SET_NAMES, STATS, collect_run, summarise
 
 # pilot data dir per (study, condition)
@@ -44,10 +46,10 @@ def stat_cols(srow: dict, stat: str) -> dict:
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--config", default="config.yaml")
+    p.add_argument("--config", default="old_snakemake/config.yaml")
     args = p.parse_args()
     cfg = yaml.safe_load(open(args.config))
-    repo = Path(args.config).resolve().parent.parent
+    repo = Path(args.config).resolve().parents[2]
     root = repo / cfg["out_root"]
 
     rows = []

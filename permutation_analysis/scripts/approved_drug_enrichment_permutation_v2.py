@@ -48,7 +48,8 @@ import numpy as np
 import polars as pl
 from scipy.stats import fisher_exact
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# matching.py lives with the pipeline that uses it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "nf_ldsc_permutation" / "bin"))
 from matching import build_matcher, load_coloc_genes as load_all_coloc, perm_rng  # noqa: E402
 
 APPROVED_STAGES = [

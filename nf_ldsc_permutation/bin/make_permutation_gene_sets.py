@@ -6,9 +6,9 @@ gene-set files (one Ensembl ID per line, no header) built exactly as
 make_gene_sets_coloc.py builds them, but with the anchor set replaced by a
 matched pseudo-anchor set.
 
-  --perm real   anchors = the real coloc H4 genes. The three sets are compared
-                with --reference-dir (data/sensitivity/thr0.5/gene_sets, the
-                coloc_thr0.5 sets); any difference is a hard error.
+  --perm real   anchors = the real coloc H4 genes. If --reference-dir is given
+                (e.g. data/sensitivity/thr0.5/gene_sets, the coloc_thr0.5 sets),
+                the three sets are compared with it; any difference is a hard error.
   --perm <int>  anchors = pseudo set drawn by matching.Matcher, matched to the
                 real anchors on in-degree, out-degree and expression stratum in
                 THIS condition's edge set; seed derived from (base_seed + perm,
@@ -81,7 +81,7 @@ def main():
                    help="'real' for the observed test, or an integer perm index")
     p.add_argument("--base-seed", type=int, default=42)
     p.add_argument("--reference-dir", default=None,
-                   help="Required for --perm real: dir of the coloc_thr0.5 sets.")
+                   help="For --perm real: sets to compare with (optional).")
     p.add_argument("--out-dir", required=True)
     args = p.parse_args()
 
@@ -137,9 +137,7 @@ def main():
         "n_targets": len(written["targets_H4"]),
     }]).write_csv(out_dir / f"{study}_{cond}_matching.tsv", separator="\t")
 
-    if args.perm == "real":
-        if not args.reference_dir:
-            raise SystemExit("--reference-dir is required for --perm real")
+    if args.perm == "real" and args.reference_dir:
         bad = []
         for a in ANNOTS:
             ref = read_set(Path(args.reference_dir) / f"{study}_{cond}_{a}.txt")

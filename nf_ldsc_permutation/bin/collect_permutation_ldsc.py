@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """Collect the v2 S-LDSC permutation null and run the pre-specified tests.
 
-Reads {out_root}/{study}/perm{P}/ldsc_results/{cond}_combined.results for every
-study x condition in config `runs` (whatever has completed; safe on a partial
-sweep) and writes, per study x condition, to {out_root}/{study}_{cond}/:
+Reads {root}/{study}/perm{P}/ldsc_results/{cond}_combined.results for every
+study x condition in --runs (whatever has completed; safe on a partial
+sweep) and writes, per study x condition, to {out_dir}/{study}_{cond}/:
 
   permutation_ldsc_perperm.csv   one row per (perm, annot): prop_snps, prop_h2,
                                  enrichment (+SE, p), coefficient (+SE, z),
@@ -13,7 +13,7 @@ sweep) and writes, per study x condition, to {out_root}/{study}_{cond}/:
                                  real set size, null set-size median / 95% range
   permutation_null_{cond}.png    null histograms, real value marked
 
-and across runs, to {out_root}/:
+and across runs, to {out_dir}/ (default: --root):
 
   summary_all.csv                all per-run summaries stacked
   pooled_mean_z.csv              per set type x condition: per-trait z and their
@@ -27,7 +27,8 @@ Statistics (for enrichment and coefficient z):
   pooled:   mean over traits of the per-set z. With two traits this is
             descriptive, so no null or p-value is attached.
 
-  uv run python scripts/collect_permutation_ldsc.py --config config.yaml
+  python bin/collect_permutation_ldsc.py --root data/permutations/<tag> \
+      --runs AITD_Saevarsdottir_32581359_1:Rest,Stim8hr ASTCO_Ferreira_30929738_1:Rest
 """
 
 from __future__ import annotations
@@ -38,7 +39,6 @@ from pathlib import Path
 
 import numpy as np
 import polars as pl
-import yaml
 
 ANNOTS = ["H4_genes", "regulators_H4", "targets_H4"]
 SET_NAMES = {"H4_genes": "anchors", "regulators_H4": "regulators",
@@ -67,12 +67,22 @@ def count_genes(path: Path):
         return sum(1 for line in f if line.strip())
 
 
+def single_kept(results: Path):
+    """The one annotation combine_annots kept, read from its .combine.txt, or None."""
+    f = results.with_suffix(".combine.txt")
+    kept = re.findall(r"\[KEEP\] (\S+):", f.read_text()) if f.exists() else []
+    return kept[0] if len(kept) == 1 else None
+
+
 def parse_results(path: Path):
     df = pl.read_csv(path, separator="\t")
+    cats = df["Category"].to_list()
+    # ldsc names a lone annotation plain L2_1, so take its name from .combine.txt.
+    single = single_kept(path) if "L2_1" in cats else None
     out = {}
     for a in ANNOTS:
         # combine_annots names columns {annot}L2_<k>; match on the prefix.
-        match = [c for c in df["Category"].to_list() if c.startswith(a + "L2")]
+        match = [c for c in cats if c.startswith(a + "L2")] or (["L2_1"] if a == single else [])
         if match:
             r = df.filter(pl.col("Category") == match[0]).row(0, named=True)
             out[a] = {k: r[col] for k, col in _FIELDS.items()}
@@ -185,22 +195,24 @@ def matching_summary(perperm: pl.DataFrame) -> pl.DataFrame:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--config", default="config.yaml")
+    p.add_argument("--root", required=True, help="{study}/perm{P}/... tree to read")
+    p.add_argument("--out-dir", help="where summaries go (default: --root)")
+    p.add_argument("--runs", nargs="+", required=True, metavar="STUDY:COND,COND")
     p.add_argument("--plot", action="store_true", default=True)
     args = p.parse_args()
 
-    cfg = yaml.safe_load(open(args.config))
-    repo = Path(args.config).resolve().parent.parent
-    root = repo / cfg["out_root"]
+    root = Path(args.root)
+    out_root = Path(args.out_dir or root)
+    runs = {s: c.split(",") for s, c in (r.split(":", 1) for r in args.runs)}
 
     all_perperm, all_summary = [], []
-    for study, conds in cfg["runs"].items():
+    for study, conds in runs.items():
         for cond in conds:
             df = collect_run(root, study, cond)
             if df.height == 0:
                 print(f"[{study} {cond}] no .results yet")
                 continue
-            out = root / f"{study}_{cond}"
+            out = out_root / f"{study}_{cond}"
             out.mkdir(parents=True, exist_ok=True)
             df.write_csv(out / "permutation_ldsc_perperm.csv")
             sdf = summarise(df)
@@ -220,11 +232,11 @@ def main() -> None:
 
     if all_perperm:
         summary = pl.concat(all_summary, how="diagonal_relaxed")
-        summary.write_csv(root / "summary_all.csv")
+        summary.write_csv(out_root / "summary_all.csv")
         pooled = pooled_mean_z(summary)
-        pooled.write_csv(root / "pooled_mean_z.csv")
+        pooled.write_csv(out_root / "pooled_mean_z.csv")
         mlog = matching_summary(pl.concat(all_perperm, how="diagonal_relaxed"))
-        mlog.write_csv(root / "matching_log_summary.csv")
+        mlog.write_csv(out_root / "matching_log_summary.csv")
         with pl.Config(tbl_cols=-1, tbl_width_chars=200, float_precision=3):
             print(pooled)
             print(mlog)
