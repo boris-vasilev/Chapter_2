@@ -1,0 +1,218 @@
+# Matched-null S-LDSC permutation, v2 — corrected pseudo-anchor matching.
+#
+# For every study x condition in config `runs`, perm == "real" reproduces the
+# observed coloc_thr0.5 run and perm == 1..n_perm are matched pseudo-anchor
+# draws (see scripts/matching.py). Outputs:
+#   {out_root}/{study}/perm{P}/gene_sets/      kept
+#   {out_root}/{study}/perm{P}/ldsc_results/   .results / .log kept
+#   {out_root}/{study}/perm{P}/annotations/{cond}/, ld_scores/{cond}/
+#                                              deleted once .results exists
+#
+# Before any LDSC job runs, `verify_real_sets` rebuilds the real gene sets for
+# every run and requires them to be identical to config reference_gene_sets;
+# if any differ, nothing downstream runs.
+#
+# Run from this directory:
+#   snakemake --profile ../perturb_ldsc_pipeline/slurm
+
+from pathlib import Path
+
+import polars as pl
+
+# Reference data / workspace / container / ldsc paths from the main config;
+# permutation params from the local one (loaded second = wins).
+configfile: "../perturb_ldsc_pipeline/config.yaml"
+configfile: "config.yaml"
+
+WORKSPACE = Path(config["workspace"]).resolve()
+
+
+def _ws(rel):
+    return str(WORKSPACE / rel)
+
+
+container: str(WORKSPACE / config["container"])
+
+PIPE_SCRIPTS = str(WORKSPACE / "perturb_ldsc_pipeline" / "scripts")
+SCRIPTS      = str(Path(workflow.basedir).resolve() / "scripts")
+
+OUT_ROOT     = _ws(config["out_root"])
+STUDY_INFO   = _ws(config["study_info"])
+DE_RESULTS   = _ws(config["de_results"])
+COLOC_DAT    = _ws(config["coloc_dat"])
+EXPRESSION   = _ws(config["expression"])
+REFERENCE    = _ws(config["reference_gene_sets"])
+SUMSTATS_DIR = _ws(config.get("sumstats_dir", "data/sumstats"))
+
+LDSC       = f"{config['ldsc_dir']}/ldsc.py"
+MAKE_ANNOT = f"{config['ldsc_dir']}/make_annot.py"
+
+ANNOT_TYPES = ["regulators_H4", "targets_H4", "H4_genes"]
+RUNS   = {s: list(c) for s, c in config["runs"].items()}
+N_PERM = int(config["n_perm"])
+PERMS  = ["real"] + [str(i) for i in range(1, N_PERM + 1)]
+ALL_CONDS = sorted({c for cs in RUNS.values() for c in cs})
+
+if not Path(EXPRESSION).exists():
+    raise ValueError(f"{EXPRESSION} missing: run "
+                     "`uv run python scripts/build_screen_expression.py` first")
+
+_STUDY_INFO = {r["study"]: r for r in pl.read_csv(STUDY_INFO).to_dicts()}
+for _s in RUNS:
+    if _s not in _STUDY_INFO:
+        raise ValueError(f"study {_s!r} not in {STUDY_INFO}")
+
+
+# --- per-study reference selection (copied from pipeline common.smk) ---
+
+def _ref_key(study):
+    info = _STUDY_INFO[study]
+    ancestry, build = info["ancestry"], info["build"]
+    prefix = "EUR" if ancestry in ("EUR", "Multi") else (
+        "EAS" if ancestry == "EAS" else None)
+    if prefix is None:
+        raise ValueError(f"Unsupported ancestry for {study}: {ancestry}")
+    return f"{prefix}_{build}"
+
+
+def study_ancestry(s):
+    return "EAS" if _STUDY_INFO[s]["ancestry"] == "EAS" else "EUR"
+
+
+def study_bim_prefix(s):  return _ws(config["bim"][_ref_key(s)])
+def study_gene_coord(s):  return _ws(config["gene_coord"][_STUDY_INFO[s]["build"]])
+def study_pc_coord(s):    return _ws(config["protein_coding_coord"][_STUDY_INFO[s]["build"]])
+def study_snp_list(s):    return _ws(config["snp_list"][study_ancestry(s)])
+def study_baseline_ld(s): return _ws(config["baseline_ld"][_ref_key(s)])
+def study_weights(s):     return _ws(config["weights"][_ref_key(s)])
+def study_allele_frq(s):  return _ws(config["allele_frq"][_ref_key(s)])
+
+
+def gene_set_args(study, cond):
+    """CLI shared by verify_real_sets and perm_chain."""
+    return (
+        f"--de-results {DE_RESULTS} --coloc {COLOC_DAT} "
+        f"--expression {EXPRESSION} "
+        f"--gene-coord {study_gene_coord(study)} "
+        f"--protein-coding-coord {study_pc_coord(study)} "
+        f"--study {study} --condition {cond} "
+        f"--cell-type {config['cell_type']} --h4-threshold {config['h4_threshold']} "
+        f"--min-anchors-per-regulator {config['min_anchors_per_regulator']} "
+        f"--min-perturbations-per-target {config['min_perturbations_per_target']} "
+        f"--min-abs-logfc {config['min_abs_logfc']} "
+        f"--n-degree-bins {config['n_degree_bins']} --n-expr-bins {config['n_expr_bins']} "
+        f"--knn-k {config['knn_k']} "
+        f"--base-seed {config['seed']} --reference-dir {REFERENCE}"
+    )
+
+
+wildcard_constraints:
+    perm  = r"real|\d+",
+    study = "|".join(RUNS),
+    cond  = "|".join(ALL_CONDS),
+
+
+localrules: all, verify_real_sets
+
+
+rule all:
+    input:
+        [f"{OUT_ROOT}/{s}/perm{p}/ldsc_results/{c}_combined.results"
+         for s, cs in RUNS.items() for c in cs for p in PERMS],
+
+
+rule verify_real_sets:
+    """Real gene sets for every run must equal the coloc_thr0.5 reference."""
+    output:
+        f"{OUT_ROOT}/_real_check/real_sets_verified.ok",
+    params:
+        cmds = "\n".join(
+            f"python {SCRIPTS}/make_permutation_gene_sets.py "
+            f"{gene_set_args(s, c)} --perm real "
+            f"--out-dir {OUT_ROOT}/_real_check/{s}"
+            for s, cs in RUNS.items() for c in cs
+        ),
+    shell:
+        """
+        {params.cmds}
+        echo "real gene sets identical to {REFERENCE}" > {output}
+        """
+
+
+rule perm_chain:
+    """One perm x condition: gene sets -> make_annot (x3) -> combine ->
+    LD scores -> h2, then delete this condition's annotations and LD scores."""
+    input:
+        verified = rules.verify_real_sets.output,
+        sumstats = SUMSTATS_DIR + "/{study}.sumstats.gz",
+    output:
+        gene_sets = expand(
+            OUT_ROOT + "/{{study}}/perm{{perm}}/gene_sets/{{study}}_{{cond}}_{annot}.txt",
+            annot=ANNOT_TYPES),
+        matching = OUT_ROOT + "/{study}/perm{perm}/gene_sets/{study}_{cond}_matching.tsv",
+        results  = OUT_ROOT + "/{study}/perm{perm}/ldsc_results/{cond}_combined.results",
+        log      = OUT_ROOT + "/{study}/perm{perm}/ldsc_results/{cond}_combined.log",
+    params:
+        gs_args    = lambda w: gene_set_args(w.study, w.cond),
+        gs_dir     = lambda w: f"{OUT_ROOT}/{w.study}/perm{w.perm}/gene_sets",
+        annot_dir  = lambda w: f"{OUT_ROOT}/{w.study}/perm{w.perm}/annotations/{w.cond}",
+        ld_dir     = lambda w: f"{OUT_ROOT}/{w.study}/perm{w.perm}/ld_scores/{w.cond}",
+        out_prefix = lambda w: f"{OUT_ROOT}/{w.study}/perm{w.perm}/ldsc_results/{w.cond}_combined",
+        bim_prefix = lambda w: study_bim_prefix(w.study),
+        gene_coord = lambda w: study_gene_coord(w.study),
+        snp_list   = lambda w: study_snp_list(w.study),
+        baseline   = lambda w: study_baseline_ld(w.study),
+        weights    = lambda w: study_weights(w.study),
+        allele_frq = lambda w: study_allele_frq(w.study),
+        window     = config["window_size"],
+        min_snps   = config.get("min_snps_per_annot", 1000),
+        annots     = " ".join(ANNOT_TYPES),
+    threads: config["chrom_parallel"]
+    resources:
+        cpus_per_task = config["chrom_parallel"],
+        mem_mb        = config["chain_mem_mb"],
+        runtime       = config["chain_runtime"],
+    shell:
+        """
+        export LC_ALL=C.UTF-8 LANG=C.UTF-8
+        export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
+        python {SCRIPTS}/make_permutation_gene_sets.py {params.gs_args} \
+            --perm {wildcards.perm} --out-dir {params.gs_dir}
+
+        mkdir -p {params.annot_dir} {params.ld_dir} $(dirname {params.out_prefix})
+        for a in {params.annots}; do
+            python {PIPE_SCRIPTS}/run_make_annot.py \
+                --make-annot {MAKE_ANNOT} \
+                --gene-set-file {params.gs_dir}/{wildcards.study}_{wildcards.cond}_$a.txt \
+                --gene-coord-file {params.gene_coord} \
+                --windowsize {params.window} \
+                --bim-prefix {params.bim_prefix} \
+                --out-prefix {params.annot_dir}/{wildcards.cond}_$a \
+                --max-parallel {threads}
+        done
+
+        python {PIPE_SCRIPTS}/combine_annots.py \
+            --in-dir {params.annot_dir} --out-dir {params.ld_dir} \
+            --condition {wildcards.cond} --names {params.annots} \
+            --min-snps {params.min_snps}
+
+        python {PIPE_SCRIPTS}/run_ldsc_l2.py \
+            --ldsc {LDSC} --bim-prefix {params.bim_prefix} \
+            --snp-list {params.snp_list} \
+            --prefix {params.ld_dir}/{wildcards.cond}_combined \
+            --max-parallel {threads}
+
+        python {LDSC} --h2 {input.sumstats} \
+            --ref-ld-chr {params.baseline},{params.ld_dir}/{wildcards.cond}_combined. \
+            --w-ld-chr {params.weights} \
+            --frqfile-chr {params.allele_frq} \
+            --overlap-annot --print-coefficients --print-cov \
+            --out {params.out_prefix}
+
+        # Intermediates are only needed to produce .results; drop them.
+        test -s {output.results}
+        rm -rf {params.annot_dir} {params.ld_dir}
+        """
+
+
+# Collection is a separate step (uv, outside the container) — see README.

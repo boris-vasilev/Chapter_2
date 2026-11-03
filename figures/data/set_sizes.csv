@@ -1,0 +1,163 @@
+study,condition,annot,n_genes,disease,group
+ADFH_Jansen_30617256_1,Rest,H4_genes,3,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Rest,regulators_H4,3,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Rest,targets_H4,0,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim48hr,H4_genes,3,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim48hr,regulators_H4,2,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim48hr,targets_H4,6,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim8hr,H4_genes,3,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim8hr,regulators_H4,5,Alzheimer's disease (proxy),non-IMD
+ADFH_Jansen_30617256_1,Stim8hr,targets_H4,0,Alzheimer's disease (proxy),non-IMD
+AITD_Saevarsdottir_32581359_1,Rest,H4_genes,63,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Rest,regulators_H4,371,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Rest,targets_H4,162,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim48hr,H4_genes,63,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim48hr,regulators_H4,396,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim48hr,targets_H4,416,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim8hr,H4_genes,63,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim8hr,regulators_H4,491,Autoimmune thyroid disease,IMD
+AITD_Saevarsdottir_32581359_1,Stim8hr,targets_H4,2096,Autoimmune thyroid disease,IMD
+ASTAO_Ferreira_30929738_1,Rest,H4_genes,23,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Rest,regulators_H4,268,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Rest,targets_H4,84,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim48hr,H4_genes,23,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim48hr,regulators_H4,271,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim48hr,targets_H4,296,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim8hr,H4_genes,23,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim8hr,regulators_H4,392,Adult-onset asthma,IMD
+ASTAO_Ferreira_30929738_1,Stim8hr,targets_H4,1821,Adult-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Rest,H4_genes,27,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Rest,regulators_H4,217,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Rest,targets_H4,417,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim48hr,H4_genes,27,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim48hr,regulators_H4,291,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim48hr,targets_H4,604,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim8hr,H4_genes,27,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim8hr,regulators_H4,384,Childhood-onset asthma,IMD
+ASTCO_Ferreira_30929738_1,Stim8hr,targets_H4,2118,Childhood-onset asthma,IMD
+AST_Sakaue_doi1011012020102320213652_1,Rest,H4_genes,9,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Rest,regulators_H4,153,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Rest,targets_H4,0,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim48hr,H4_genes,9,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim48hr,regulators_H4,201,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim48hr,targets_H4,0,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim8hr,H4_genes,9,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim8hr,regulators_H4,230,Asthma (EAS),IMD
+AST_Sakaue_doi1011012020102320213652_1,Stim8hr,targets_H4,0,Asthma (EAS),IMD
+ATD_BuduAggrey_37794016_1,Rest,H4_genes,18,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Rest,regulators_H4,184,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Rest,targets_H4,417,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim48hr,H4_genes,18,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim48hr,regulators_H4,189,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim48hr,targets_H4,140,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim8hr,H4_genes,18,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim8hr,regulators_H4,331,Atopic dermatitis,IMD
+ATD_BuduAggrey_37794016_1,Stim8hr,targets_H4,383,Atopic dermatitis,IMD
+CD_DeLange_28067908_1,Rest,H4_genes,28,Crohn's disease,IMD
+CD_DeLange_28067908_1,Rest,regulators_H4,189,Crohn's disease,IMD
+CD_DeLange_28067908_1,Rest,targets_H4,564,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim48hr,H4_genes,28,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim48hr,regulators_H4,231,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim48hr,targets_H4,514,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim8hr,H4_genes,28,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim8hr,regulators_H4,330,Crohn's disease,IMD
+CD_DeLange_28067908_1,Stim8hr,targets_H4,1063,Crohn's disease,IMD
+IBD_DeLange_28067908_1,Rest,H4_genes,24,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Rest,regulators_H4,185,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Rest,targets_H4,87,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim48hr,H4_genes,24,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim48hr,regulators_H4,224,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim48hr,targets_H4,210,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim8hr,H4_genes,24,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim8hr,regulators_H4,313,Inflammatory bowel disease,IMD
+IBD_DeLange_28067908_1,Stim8hr,targets_H4,202,Inflammatory bowel disease,IMD
+IS_Sakaue_34594039_1,Rest,H4_genes,3,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Rest,regulators_H4,26,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Rest,targets_H4,0,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim48hr,H4_genes,3,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim48hr,regulators_H4,15,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim48hr,targets_H4,0,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim8hr,H4_genes,3,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim8hr,regulators_H4,31,Ischaemic stroke,non-IMD
+IS_Sakaue_34594039_1,Stim8hr,targets_H4,0,Ischaemic stroke,non-IMD
+MYOI_Sakaue_34594039_1,Rest,H4_genes,20,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Rest,regulators_H4,66,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Rest,targets_H4,73,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim48hr,H4_genes,20,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim48hr,regulators_H4,113,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim48hr,targets_H4,29,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim8hr,H4_genes,20,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim8hr,regulators_H4,140,Myocardial infarction,non-IMD
+MYOI_Sakaue_34594039_1,Stim8hr,targets_H4,143,Myocardial infarction,non-IMD
+OA_McDonald_36411363_3,Rest,H4_genes,5,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Rest,regulators_H4,108,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Rest,targets_H4,0,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim48hr,H4_genes,5,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim48hr,regulators_H4,49,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim48hr,targets_H4,0,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim8hr,H4_genes,5,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim8hr,regulators_H4,111,Osteoarthritis,non-IMD
+OA_McDonald_36411363_3,Stim8hr,targets_H4,0,Osteoarthritis,non-IMD
+RA_Ishigaki_36333501_1,Rest,H4_genes,16,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Rest,regulators_H4,119,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Rest,targets_H4,162,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim48hr,H4_genes,16,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim48hr,regulators_H4,113,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim48hr,targets_H4,90,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim8hr,H4_genes,16,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim8hr,regulators_H4,204,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_1,Stim8hr,targets_H4,263,Rheumatoid arthritis (EAS),IMD
+RA_Ishigaki_36333501_2,Rest,H4_genes,25,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Rest,regulators_H4,233,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Rest,targets_H4,231,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim48hr,H4_genes,25,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim48hr,regulators_H4,283,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim48hr,targets_H4,90,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim8hr,H4_genes,25,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim8hr,regulators_H4,360,Rheumatoid arthritis (EUR),IMD
+RA_Ishigaki_36333501_2,Stim8hr,targets_H4,402,Rheumatoid arthritis (EUR),IMD
+SCZ_Pardiñas_29483656_1,Rest,H4_genes,17,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Rest,regulators_H4,81,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Rest,targets_H4,25,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim48hr,H4_genes,17,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim48hr,regulators_H4,90,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim48hr,targets_H4,145,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim8hr,H4_genes,17,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim8hr,regulators_H4,109,Schizophrenia,non-IMD
+SCZ_Pardiñas_29483656_1,Stim8hr,targets_H4,32,Schizophrenia,non-IMD
+SLE_Bentham_26502338_1,Rest,H4_genes,7,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Rest,regulators_H4,20,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Rest,targets_H4,483,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim48hr,H4_genes,7,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim48hr,regulators_H4,69,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim48hr,targets_H4,312,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim8hr,H4_genes,7,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim8hr,regulators_H4,90,Systemic lupus erythematosus,IMD
+SLE_Bentham_26502338_1,Stim8hr,targets_H4,721,Systemic lupus erythematosus,IMD
+T1D_Robertson_34127860_1,Rest,H4_genes,26,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Rest,regulators_H4,258,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Rest,targets_H4,53,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim48hr,H4_genes,26,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim48hr,regulators_H4,317,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim48hr,targets_H4,210,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim8hr,H4_genes,26,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim8hr,regulators_H4,369,Type 1 diabetes,IMD
+T1D_Robertson_34127860_1,Stim8hr,targets_H4,202,Type 1 diabetes,IMD
+T2D_Xue_30054458_1,Rest,H4_genes,21,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Rest,regulators_H4,131,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Rest,targets_H4,0,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim48hr,H4_genes,21,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim48hr,regulators_H4,131,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim48hr,targets_H4,64,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim8hr,H4_genes,21,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim8hr,regulators_H4,171,Type 2 diabetes,non-IMD
+T2D_Xue_30054458_1,Stim8hr,targets_H4,31,Type 2 diabetes,non-IMD
+UC_DeLange_28067908_1,Rest,H4_genes,9,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Rest,regulators_H4,112,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Rest,targets_H4,0,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim48hr,H4_genes,9,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim48hr,regulators_H4,175,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim48hr,targets_H4,0,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim8hr,H4_genes,9,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim8hr,regulators_H4,173,Ulcerative colitis,IMD
+UC_DeLange_28067908_1,Stim8hr,targets_H4,0,Ulcerative colitis,IMD

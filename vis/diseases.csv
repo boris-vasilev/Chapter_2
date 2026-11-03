@@ -1,0 +1,19 @@
+study,trait,disease,display_name,abbrev,group,gwas_first_author,gwas_pmid_or_doi,ancestry,n_cases,n_controls,cite_key,sample_group
+AITD_Saevarsdottir_32581359_1,AITD,Autoimmune thyroid disease,Autoimmune thyroid disease,AITD,IMD,Saevarsdottir,32581359,EUR,30234,725172,saevarsdottir2020,
+ASTAO_Ferreira_30929738_1,ASTAO,Adult-onset asthma,Adult-onset asthma,AOA,IMD,Ferreira,30929738,EUR,26582,300671,ferreira2019,ferreira2019
+ASTCO_Ferreira_30929738_1,ASTCO,Childhood-onset asthma,Childhood-onset asthma,COA,IMD,Ferreira,30929738,EUR,13962,300671,ferreira2019,ferreira2019
+AST_Sakaue_doi1011012020102320213652_1,AST,Asthma (EAS),Asthma (EAS),ASTH-EAS,IMD,Sakaue,doi:10.1101/2020.10.23.20213652,EAS,13015,162933,sakaue2021,
+ATD_BuduAggrey_37794016_1,ATD,Atopic dermatitis,Atopic dermatitis,AD,IMD,Budu-Aggrey,37794016,EUR,60653,804329,buduaggrey2023,
+CD_DeLange_28067908_1,CD,Crohn's disease,Crohn's disease,CD,IMD,de Lange,28067908,EUR,12194,28072,delange2017,delange2017
+IBD_DeLange_28067908_1,IBD,Inflammatory bowel disease,Inflammatory bowel disease,IBD,IMD,de Lange,28067908,EUR,25042,34915,delange2017,delange2017
+UC_DeLange_28067908_1,UC,Ulcerative colitis,Ulcerative colitis,UC,IMD,de Lange,28067908,EUR,12366,33609,delange2017,delange2017
+RA_Ishigaki_36333501_1,RA_1,Rheumatoid arthritis (EAS),Rheumatoid arthritis (EAS),RA-EAS,IMD,Ishigaki,36333501,EAS,11025,162608,ishigaki2022,ishigaki2022
+RA_Ishigaki_36333501_2,RA_2,Rheumatoid arthritis (EUR),Rheumatoid arthritis (EUR),RA-EUR,IMD,Ishigaki,36333501,EUR,22350,74823,ishigaki2022,ishigaki2022
+SLE_Bentham_26502338_1,SLE,Systemic lupus erythematosus,Systemic lupus erythematosus,SLE,IMD,Bentham,26502338,EUR,5201,9066,bentham2015,
+T1D_Robertson_34127860_1,T1D,Type 1 diabetes,Type 1 diabetes,T1D,IMD,Robertson,34127860,Multi,22153,37374,robertson2021,
+ADFH_Jansen_30617256_1,ADFH,Alzheimer's disease (family-history proxy),Alzheimer's disease (proxy),ALZ,non-IMD,Jansen,30617256,EUR,71880,383378,jansen2019,
+IS_Sakaue_34594039_1,IS,Ischaemic stroke,Ischaemic stroke,IS,non-IMD,Sakaue,34594039,Multi,34593,624214,sakaue2021,
+MYOI_Sakaue_34594039_1,MYOI,Myocardial infarction,Myocardial infarction,MI,non-IMD,Sakaue,34594039,Multi,35909,587120,sakaue2021,
+OA_McDonald_36411363_3,OA,Osteoarthritis,Osteoarthritis,OA,non-IMD,McDonald,36411363,Multi,133506,335938,mcdonald2022,
+SCZ_Pardiñas_29483656_1,SCZ,Schizophrenia,Schizophrenia,SCZ,non-IMD,Pardiñas,29483656,EUR,40675,64643,pardinas2018,
+T2D_Xue_30054458_1,T2D,Type 2 diabetes,Type 2 diabetes,T2D,non-IMD,Xue,30054458,Multi,62892,596424,xue2018,

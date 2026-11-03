@@ -1,0 +1,144 @@
+# --------------------------------------------------------------------
+# Perturb-seq + GWAS S-LDSC pipeline configuration
+# --------------------------------------------------------------------
+
+# Project root. All other paths below are relative to this unless absolute.
+workspace: "/home/biv22/rds/rds-mrc-bsu-csoP2nj6Y6Y/biv22/perturb_heritability_model"
+
+# Apptainer/Singularity image (LDSC + polars + scanpy)
+container: "containers/ldsc39_env.sif"
+
+# Shared inputs (module-agnostic) -----------------------------------
+de_input_h5ad: "data/GWCD4i.DE_stats.h5ad"
+
+# Outputs (root directories — module subtree added automatically) ---
+de_results:             "data/DE_results_strong.csv"
+gene_sets_dir:          "data/gene_sets"
+annotations_dir:        "data/annotations"
+ld_scores_dir:          "data/ld_scores"
+ld_scores_filtered_dir: "data/ld_scores_filtered"
+ldsc_results_dir:       "data/ldsc_results"
+
+# DE filter ---------------------------------------------------------
+padj_threshold: 0.05
+
+# Gene set module ---------------------------------------------------
+# Selects which rules/gene_sets_*.smk file is included.
+# Currently supported: "coloc". Add "l2g" later by creating
+# rules/gene_sets_l2g.smk that exposes the same outputs.
+gene_set_module: "coloc"
+
+# Each module declares its own study list, raw GWAS dir, and munged
+# sumstats dir. Switching `gene_set_module` above flips all three.
+coloc:
+  study_info:   "data/GWAS_study_info.csv"
+  gwas_dir:     "data/GWAS"
+  sumstats_dir: "data/sumstats"
+  coloc_dat:    "data/coloc_dat.tsv"
+  cell_type:    "CD4"
+  h3_threshold: 0.8
+  h4_threshold: 0.8
+  # If true, only build H4 annotations (regulators_H4 + targets_H4 + H4_genes)
+  h4_only: true
+
+coloc_strong:
+  study_info:   "data/GWAS_study_info.csv"
+  gwas_dir:     "data/GWAS"
+  sumstats_dir: "data/sumstats"
+  coloc_dat:    "data/coloc_dat.tsv"
+  cell_type:    "CD4"
+  h3_threshold: 0.8
+  h4_threshold: 0.8
+  # If true, only build H4 annotations (regulators_H4 + targets_H4 + H4_genes)
+  h4_only: true
+
+# Keep only genes with at regulating at least `min_reg_k` coloc genes and `min_tgt_k` targets of at least K coloc genes.
+coloc_strict:
+  study_info:   "data/GWAS_study_info.csv"
+  gwas_dir:     "data/GWAS"
+  sumstats_dir: "data/sumstats"
+  coloc_dat:    "data/coloc_dat.tsv"
+  cell_type:    "CD4"
+  h3_threshold: 0.8
+  h4_threshold: 0.8
+  # If true, only build H4 annotations (regulators_H4 + targets_H4 + H4_genes)
+  h4_only: true
+  min_reg_k: 3
+  min_tgt_k: 3
+
+# Programmes module — Perturb-seq programme (Zhu cluster) S-LDSC.
+# Cell-type-specific design: each programme is tested on its own against
+# baselineLD; the programme's coefficient z-score is the enrichment signal.
+# Gene sets are study-independent, so LD scores are built once per reference
+# panel and reused across studies. Reuses the GWAS study list / sumstats.
+programs:
+  study_info:          "data/GWAS_study_info.csv"
+  gwas_dir:            "data/GWAS"
+  sumstats_dir:        "data/sumstats"
+  program_assignments: "data/programs_zhu/program_assignments.csv"
+  # Skip clusters with fewer than this many member genes (too few SNPs for
+  # a stable S-LDSC coefficient).
+  min_program_size:    10
+
+# L2G (Locus-to-Gene) module - OpenTargets parquet export.
+# Expects this layout under data_dir:
+#   {data_dir}/l2g/*.parquet           (studyLocusId, geneId, score, ...)
+#   {data_dir}/credible_set/*.parquet  (studyLocusId, studyId, ...)
+#   {data_dir}/study/*.parquet         (studyId, pubmedId, ...)
+# The `study` column in study_info IS the OpenTargets studyId — no
+# extra mapping is needed.
+l2g:
+  study_info:      "data/opentargets/GWAS_study_info.csv"
+  gwas_dir:        "data/opentargets/sumstats_raw"
+  sumstats_dir:    "data/opentargets/sumstats"
+  data_dir:        "data/opentargets"
+  score_threshold: 0.5
+
+# Perturb-seq culture conditions to model
+conditions:
+  - Rest
+  - Stim8hr
+  - Stim48hr
+
+# Annotation construction -------------------------------------------
+window_size: 10000
+
+# LDSC tool paths (inside container) --------------------------------
+ldsc_dir: "/app/ldsc"
+
+# Reference data (paths relative to workspace) ----------------------
+gene_coord:
+  GRCh37: "data/gene_coord.txt"
+  GRCh38: "data/gene_coord_hg38.txt"
+
+bim:
+  EUR_GRCh37: "data/GRCh37/1000G_Phase3_plink/1000G.EUR.QC"
+  EAS_GRCh37: "data/GRCh37_EAS/1000G_Phase3_plink/1000G.EAS.QC"
+  EUR_GRCh38: "data/GRCh38/1000G_Phase3_plink/1000G.EUR.hg38"
+
+snp_list:
+  EUR: "data/hm3_no_MHC.list.txt"
+  EAS: "data/hm3_EAS_no_MHC.list.txt"
+
+baseline_ld:
+  EUR_GRCh37: "data/GRCh37/baselineLD_v2.2/baselineLD."
+  EUR_GRCh38: "data/GRCh38/baselineLD_v2.2/baselineLD."
+  EAS_GRCh37: "data/GRCh37_EAS/baselineLD_v2.2/baselineLD."
+
+weights:
+  EUR_GRCh37: "data/GRCh37/1000G_Phase3_weights_hm3_no_MHC/weights.hm3_noMHC."
+  EUR_GRCh38: "data/GRCh38/1000G_Phase3_weights_hm3_no_MHC/weights.hm3_noMHC."
+  EAS_GRCh37: "data/GRCh37_EAS/1000G_Phase3_weights_hm3_no_MHC/weights.EAS.hm3_noMHC."
+
+allele_frq:
+  EUR_GRCh37: "data/GRCh37/1000G_Phase3_plink/1000G.EUR.QC."
+  EUR_GRCh38: "data/GRCh38/1000G_Phase3_plink/1000G.EUR.hg38."
+  EAS_GRCh37: "data/GRCh37_EAS/1000G_Phase3_plink/1000G.EAS.QC."
+
+# Optional low-SNP-count annotation filter --------------------------
+# When true, after the first LD-score pass, annotations with var=0 or
+# fewer than `min_snps_per_annot` tagged SNPs are dropped from the
+# combined .annot files, then LD scores are recomputed and h2 is
+# estimated against the filtered set.
+filter_low_snp_annots: false
+min_snps_per_annot: 1000

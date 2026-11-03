@@ -1,0 +1,43 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Generated analysis staging files
+/build/
+
+# Snakemake
+.snakemake/
+.snakemake_timestamp
+
+# Nextflow
+.nextflow/
+.nextflow.log*
+work/
+
+# Cluster and pipeline logs
+*.log
+slurm-*.out
+
+# OS and editor files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.idea/
+.vscode/
+*.swp
+*.swo
+

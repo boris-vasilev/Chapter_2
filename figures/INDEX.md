@@ -1,0 +1,56 @@
+# Chapter 2 figures — index
+
+Variant: **coloc_thr0.5** (anchors CD4 coloc PP.H4 > 0.8; perturbation edges padj < 0.05, |z| ≥ 2, |logFC| ≥ 0.5, strong perturbations only).
+Rebuild everything from an empty folder with `uv run 00_build_all.py` in `chapter2/vis/`; each command below writes to `build/` and the build script copies it here under the figure number.
+
+| Figure | File | Chapter section | Message | Command (from chapter2/vis) | Variant |
+|---|---|---|---|---|---|
+| Table 2.1 | `main/table_2_1_traits.tex` | Traits and anchors | Eighteen GWAS traits (12 immune-mediated, 6 non-IMD controls) colocalise with 2–7 CD4+ eQTL studies and contribute 3–63 coloc genes (anchors). | `uv run 01_coloc_summary_table.py` | coloc_thr0.5 |
+| Table 2.1 | `main/table_2_1_traits.csv` | Traits and anchors | Eighteen GWAS traits (12 immune-mediated, 6 non-IMD controls) colocalise with 2–7 CD4+ eQTL studies and contribute 3–63 coloc genes (anchors). | `uv run 01_coloc_summary_table.py` | coloc_thr0.5 |
+| Fig. 2.1 | `main/fig_2_1_overview.pdf` | Study design and anchors | Most anchors respond to some knockdown but few are strong knockdowns themselves, and anchor sets overlap mainly between related immune-mediated diseases. | `uv run 07_fig_2_1.py` | coloc_thr0.5 |
+| Fig. 2.2 | `main/fig_2_2_graph_and_sets.pdf` | Perturbation-response graph and expanded sets | A few knockdowns affect many genes and some genes respond to many knockdowns, so expanded sets are large and often come from a single anchor. | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. 2.6A | `main/fig_2_6a_regulator_overlap_8h.pdf` | Overlap of expanded sets between diseases | At 8 h, regulator sets overlap more than expected by chance for every pair of diseases, most strongly among immune-mediated diseases. | `uv run 04_jaccard_heatmaps.py --condition Stim8hr --pair` | coloc_thr0.5 |
+| Fig. 4 | `main/heritability/fig_4_heritability.pdf` | Heritability enrichment of expanded sets | Expanded sets are marginally enriched for immune-mediated disease heritability, but not conditionally on the baseline and anchor annotations. | `uv run heritability/02_fig_4_heritability.py` | coloc_thr0.5 |
+| Fig. S2A | `supp/fig_s2a_regulator_overlap_observed.pdf` | Overlap of expanded sets between diseases | Regulator-set overlap between diseases is similar in all three conditions. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2B | `supp/fig_s2b_regulator_overlap_excess.pdf` | Overlap of expanded sets between diseases | In every condition, regulator-set overlap exceeds the random expectation for almost all disease pairs, most for pairs of immune-mediated diseases. | `uv run 04_jaccard_heatmaps.py --excess` | coloc_thr0.5 |
+| Fig. S2C | `supp/fig_s2c_target_overlap_observed.pdf` | Overlap of expanded sets between diseases | Target sets overlap only between diseases that share a dominant anchor. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2D | `supp/fig_s2d_target_overlap_excess.pdf` | Overlap of expanded sets between diseases | Excess target-set overlap is near zero except for diseases that share a dominant anchor. | `uv run 04_jaccard_heatmaps.py --excess` | coloc_thr0.5 |
+| Fig. S3 | `supp/fig_s3_set_size_by_condition.pdf` | Expanded sets across stimulation conditions | Regulator and target sets are largest at 8 h of stimulation. | `uv run 03_condition_size_change.py` | coloc_thr0.5 |
+| Fig. S4 | `supp/fig_s4_stacked_set_sizes.pdf` | Perturbation-response graph and expanded sets | Expanded sets are one to two orders of magnitude larger than anchor sets. | `uv run 02_gene_set_sizes_barplot.py` | coloc_thr0.5 |
+| Fig. S5 | `supp/heritability/fig_s_heritability_forest.pdf` | Heritability enrichment of expanded sets | Expanded-set enrichment intervals mostly exclude one, while their τ* intervals mostly include zero. | `uv run heritability/03_fig_s_forest.py` | coloc_thr0.5 |
+| Fig. S6 | `supp/heritability/fig_s_enrichment_vs_coverage.pdf` | Heritability enrichment of expanded sets | Enrichment falls as annotations get larger: small anchor sets have the largest enrichment. | `uv run heritability/04_fig_s_scatter.py` | coloc_thr0.5 |
+| Fig. S7 | `supp/heritability/fig_s_enrichment_vs_tau.pdf` | Heritability enrichment of expanded sets | No enriched regulator or target set passes the τ* threshold; anchors pass both or neither. | `uv run heritability/04_fig_s_scatter.py` | coloc_thr0.5 |
+| Table 2.1 | `data/table_2_1_eqtl_sources.csv` | Data | Per-disease eQTL study list for the Table 2.1 footnote (unverified mapping). | `uv run 01_coloc_summary_table.py` | coloc_thr0.5 |
+| Fig. 2.1B | `data/anchor_coverage.csv` | Data | One row per (disease, condition, anchor) with its edge category. | `uv run 06_anchor_coverage.py` | coloc_thr0.5 |
+| Fig. 2.1C | `data/jaccard_anchors_observed.csv` | Data | Anchor Jaccard matrix (clustered order). | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. 2.2A, B | `data/degrees.csv` | Data | Out- and in-degree per gene and condition. | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. 2.2D, S3, S4 | `data/set_sizes.csv` | Data | Anchor, regulator and target set sizes per disease and condition. | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. 2.2C | `data/genome_coverage.csv` | Data | % reference SNPs per annotation (S-LDSC Prop._SNPs × 100). | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. 2.2E | `data/largest_anchor_share.csv` | Data | Largest single-anchor share of each non-empty expanded set. | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. 2.2 (text) | `data/overview_numbers.csv` | Data | Per-condition universe sizes, degree summaries and median coverage. | `uv run 05_perturbation_graph.py` | coloc_thr0.5 |
+| Fig. S3 | `data/set_size_by_condition_tests.csv` | Data | Friedman / Wilcoxon tests (not on the figure) and excluded diseases. | `uv run 03_condition_size_change.py` | coloc_thr0.5 |
+| Fig. S2A, S2B | `data/jaccard_regulators_Rest_observed.csv` | Data | Observed Jaccard matrix, regulators, Rest. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2A, S2B | `data/jaccard_regulators_Rest_expected.csv` | Data | Expected Jaccard matrix, regulators, Rest. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. 2.6A, S2A, S2B | `data/jaccard_regulators_Stim8hr_observed.csv` | Data | Observed Jaccard matrix, regulators, Stim8hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. 2.6A, S2A, S2B | `data/jaccard_regulators_Stim8hr_expected.csv` | Data | Expected Jaccard matrix, regulators, Stim8hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2A, S2B | `data/jaccard_regulators_Stim48hr_observed.csv` | Data | Observed Jaccard matrix, regulators, Stim48hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2A, S2B | `data/jaccard_regulators_Stim48hr_expected.csv` | Data | Expected Jaccard matrix, regulators, Stim48hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Rest_observed.csv` | Data | Observed Jaccard matrix, targets, Rest. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Rest_expected.csv` | Data | Expected Jaccard matrix, targets, Rest. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Stim8hr_observed.csv` | Data | Observed Jaccard matrix, targets, Stim8hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Stim8hr_expected.csv` | Data | Expected Jaccard matrix, targets, Stim8hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Stim48hr_observed.csv` | Data | Observed Jaccard matrix, targets, Stim48hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. S2C, S2D | `data/jaccard_targets_Stim48hr_expected.csv` | Data | Expected Jaccard matrix, targets, Stim48hr. | `uv run 04_jaccard_heatmaps.py` | coloc_thr0.5 |
+| Fig. 4, S5–S7 | `data/heritability/heritability_long.csv` | Data | One row per trait × condition × annotation: status, set size, Prop._SNPs, Prop._h2 (+ negative flag), FDR family, enrichment (SE, p, z, FDR, sig), τ (SE, z), τ* (SE, z, one-sided p, FDR, sig; two-sided p/FDR/sig kept). | `uv run heritability/01_collect_results.py` | coloc_thr0.5 |
+| Fig. 4 (methods) | `data/heritability/ldsc_runs.csv` | Data | One row per trait × condition: LD reference, files present, h2g, implied M, run status. | `uv run heritability/01_collect_results.py` | coloc_thr0.5 |
+| Text | `data/numbers_for_text.md` | Data | Numbers for the chapter text (Heritability section). | `uv run heritability/05_numbers_for_text.py` | coloc_thr0.5 |
+| — | `INDEX.md` | — | This index. | `uv run 00_build_all.py` | coloc_thr0.5 |
+| — | `contact_sheet.pdf` | — | One page per figure and table with number, message and caption, then the full file list. | `uv run 00_build_all.py` | coloc_thr0.5 |
+| — | `NOTES_overview.md` | — | Definitions, checks, measured results, interpretation and open questions. | `uv run 00_build_all.py` | coloc_thr0.5 |
+| — | `NOTES_heritability.md` | — | S-LDSC inventory (Step 0), τ* computation and check, measured results, interpretation, not done. | `uv run 00_build_all.py` | coloc_thr0.5 |
+
+## Reserved
+
+| Figure | File | Chapter section | Message | Command (from chapter2/vis) | Variant |
+|---|---|---|---|---|---|
+| Fig. 4C | `main/heritability/fig_4c_…` (not yet made) | Heritability enrichment of expanded sets | Enrichment with an all-measured-genes annotation added to the model (S-LDSC not yet run). | — | coloc_thr0.5 |

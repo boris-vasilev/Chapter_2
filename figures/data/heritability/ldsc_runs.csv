@@ -1,0 +1,55 @@
+study,condition,ld_reference,ld_reference_ancestry,h2_obs,h2_obs_se,files,error,status,h2_over_M,M_implied,n_custom,gwas_ancestry,ld_mismatch
+AITD_Saevarsdottir_32581359_1,Rest,1000G EUR (GRCh38),EUR,0.0313,0.0025,".cov, .log, .results",,results,5.260495827634809e-09,5950009.47164954,3,EUR,False
+AITD_Saevarsdottir_32581359_1,Stim8hr,1000G EUR (GRCh38),EUR,0.0313,0.0025,".cov, .log, .results",,results,5.259759495663487e-09,5950842.434108614,3,EUR,False
+AITD_Saevarsdottir_32581359_1,Stim48hr,1000G EUR (GRCh38),EUR,0.0314,0.0025,".cov, .log, .results",,results,5.270961975697866e-09,5957166.859630531,3,EUR,False
+ASTAO_Ferreira_30929738_1,Rest,1000G EUR (GRCh37),EUR,0.0494,0.0044,".cov, .log, .results",,results,8.283294220759571e-09,5963810.856337065,3,EUR,False
+ASTAO_Ferreira_30929738_1,Stim8hr,1000G EUR (GRCh37),EUR,0.0491,0.0044,".cov, .log, .results",,results,8.239812526504105e-09,5958873.438208138,3,EUR,False
+ASTAO_Ferreira_30929738_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0491,0.0044,".cov, .log, .results",,results,8.239518124888678e-09,5959086.351383368,3,EUR,False
+ASTCO_Ferreira_30929738_1,Rest,1000G EUR (GRCh37),EUR,0.0734,0.0064,".cov, .log, .results",,results,1.2306448750962613e-08,5964352.632131885,3,EUR,False
+ASTCO_Ferreira_30929738_1,Stim8hr,1000G EUR (GRCh37),EUR,0.0735,0.0064,".cov, .log, .results",,results,1.2336962580672633e-08,5957706.32514901,3,EUR,False
+ASTCO_Ferreira_30929738_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0734,0.0064,".cov, .log, .results",,results,1.23142699600497e-08,5960564.470173737,3,EUR,False
+AST_Sakaue_doi1011012020102320213652_1,Rest,1000G EAS (GRCh37),EAS,0.0335,0.0054,".cov, .log, .results",,results,6.121507320502501e-09,5472508.362082635,2,EAS,False
+AST_Sakaue_doi1011012020102320213652_1,Stim8hr,1000G EAS (GRCh37),EAS,0.0335,0.0054,".cov, .log, .results",,results,6.123190866067378e-09,5471003.718934437,2,EAS,False
+AST_Sakaue_doi1011012020102320213652_1,Stim48hr,1000G EAS (GRCh37),EAS,0.0333,0.0054,".cov, .log, .results",,results,6.083474612485663e-09,5473845.478315207,2,EAS,False
+ATD_BuduAggrey_37794016_1,Rest,1000G EUR (GRCh37),EUR,0.0164,0.0018,".cov, .log, .results",,results,2.751388953714484e-09,5960625.806053104,3,EUR,False
+ATD_BuduAggrey_37794016_1,Stim8hr,1000G EUR (GRCh37),EUR,0.0164,0.0018,".cov, .log, .results",,results,2.754444864207538e-09,5954012.807846974,3,EUR,False
+ATD_BuduAggrey_37794016_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0164,0.0018,".cov, .log, .results",,results,2.7506864423208835e-09,5962148.119711729,3,EUR,False
+CD_DeLange_28067908_1,Rest,1000G EUR (GRCh37),EUR,0.4125,0.0359,".cov, .log, .results",,results,6.920173908768254e-08,5960832.855332422,3,EUR,False
+CD_DeLange_28067908_1,Stim8hr,1000G EUR (GRCh37),EUR,0.4122,0.0359,".cov, .log, .results",,results,6.914043186048352e-08,5961779.365679498,3,EUR,False
+CD_DeLange_28067908_1,Stim48hr,1000G EUR (GRCh37),EUR,0.4134,0.0359,".cov, .log, .results",,results,6.934822810848817e-08,5961219.360259331,3,EUR,False
+IBD_DeLange_28067908_1,Rest,1000G EUR (GRCh37),EUR,0.3192,0.0241,".cov, .log, .results",,results,5.3548338138582286e-08,5960969.305413648,3,EUR,False
+IBD_DeLange_28067908_1,Stim8hr,1000G EUR (GRCh37),EUR,0.3194,0.0241,".cov, .log, .results",,results,5.358712274069298e-08,5960387.191258062,3,EUR,False
+IBD_DeLange_28067908_1,Stim48hr,1000G EUR (GRCh37),EUR,0.3202,0.0242,".cov, .log, .results",,results,5.3710543141232765e-08,5961585.589593253,3,EUR,False
+UC_DeLange_28067908_1,Rest,1000G EUR (GRCh37),EUR,0.2791,0.0262,".cov, .log, .results",,results,4.682406264023139e-08,5960610.512258207,2,EUR,False
+UC_DeLange_28067908_1,Stim8hr,1000G EUR (GRCh37),EUR,0.2792,0.0262,".cov, .log, .results",,results,4.683834455018128e-08,5960928.010614743,2,EUR,False
+UC_DeLange_28067908_1,Stim48hr,1000G EUR (GRCh37),EUR,0.2791,0.0262,".cov, .log, .results",,results,4.682160742599311e-08,5960923.072561091,2,EUR,False
+RA_Ishigaki_36333501_1,Rest,1000G EAS (GRCh37),EAS,0.0663,0.0067,".cov, .log, .results",,results,1.2118095925246006e-08,5471156.558669844,3,EAS,False
+RA_Ishigaki_36333501_1,Stim8hr,1000G EAS (GRCh37),EAS,0.0661,0.0067,".cov, .log, .results",,results,1.2082925099256946e-08,5470529.648823604,3,EAS,False
+RA_Ishigaki_36333501_1,Stim48hr,1000G EAS (GRCh37),EAS,0.0662,0.0067,".cov, .log, .results",,results,1.2096353276235893e-08,5472723.761305351,3,EAS,False
+RA_Ishigaki_36333501_2,Rest,1000G EUR (GRCh37),EUR,0.1418,0.0123,".cov, .log, .results",,results,2.3780716625652388e-08,5962814.41943762,3,EUR,False
+RA_Ishigaki_36333501_2,Stim8hr,1000G EUR (GRCh37),EUR,0.1421,0.0123,".cov, .log, .results",,results,2.3833337005637303e-08,5962236.843560306,3,EUR,False
+RA_Ishigaki_36333501_2,Stim48hr,1000G EUR (GRCh37),EUR,0.1415,0.0121,".cov, .log, .results",,results,2.3734970510150657e-08,5961667.402935476,3,EUR,False
+SLE_Bentham_26502338_1,Rest,1000G EUR (GRCh37),EUR,0.3944,0.071,".cov, .log, .results",,results,6.615658396931982e-08,5961613.740257558,3,EUR,False
+SLE_Bentham_26502338_1,Stim8hr,1000G EUR (GRCh37),EUR,0.3939,0.0709,".cov, .log, .results",,results,6.608249501079348e-08,5960731.354584341,3,EUR,False
+SLE_Bentham_26502338_1,Stim48hr,1000G EUR (GRCh37),EUR,0.3916,0.0716,".cov, .log, .results",,results,6.568757241911732e-08,5961553.846158441,3,EUR,False
+T1D_Robertson_34127860_1,Rest,1000G EUR (GRCh38),EUR,0.828,0.1818,".cov, .log, .results",,results,1.3901848037607996e-07,5956042.662529843,3,Multi,True
+T1D_Robertson_34127860_1,Stim8hr,1000G EUR (GRCh38),EUR,0.8323,0.182,".cov, .log, .results",,results,1.3973071923230584e-07,5956456.851955942,3,Multi,True
+T1D_Robertson_34127860_1,Stim48hr,1000G EUR (GRCh38),EUR,0.8495,0.1846,".cov, .log, .results",,results,1.426308514265699e-07,5955934.438471363,3,Multi,True
+ADFH_Jansen_30617256_1,Rest,,,,,,,not run,,,0,EUR,False
+ADFH_Jansen_30617256_1,Stim8hr,,,,,,,not run,,,0,EUR,False
+ADFH_Jansen_30617256_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0157,0.0021,".cov, .log, .results",,results,2.6313430521973526e-09,5966534.841167675,1,EUR,False
+IS_Sakaue_34594039_1,Rest,1000G EUR (GRCh37),EUR,0.0064,0.0012,".cov, .log, .results",,results,1.0690033948314504e-09,5986884.635674227,2,Multi,True
+IS_Sakaue_34594039_1,Stim8hr,1000G EUR (GRCh37),EUR,0.0064,0.0012,".cov, .log, .results",,results,1.0666024121994193e-09,6000361.453151685,2,Multi,True
+IS_Sakaue_34594039_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0064,0.0012,".cov, .log, .results",,results,1.0691561920296459e-09,5986029.027106396,2,Multi,True
+MYOI_Sakaue_34594039_1,Rest,1000G EUR (GRCh37),EUR,0.0249,0.0024,".cov, .log, .results",,results,4.182756369308308e-09,5953012.272650641,3,Multi,True
+MYOI_Sakaue_34594039_1,Stim8hr,1000G EUR (GRCh37),EUR,0.025,0.0024,".cov, .log, .results",,results,4.190426500146853e-09,5965979.835017719,3,Multi,True
+MYOI_Sakaue_34594039_1,Stim48hr,1000G EUR (GRCh37),EUR,0.025,0.0024,".cov, .log, .results",,results,4.1883126713284215e-09,5968990.847111389,3,Multi,True
+OA_McDonald_36411363_3,Rest,1000G EUR (GRCh37),EUR,0.0518,0.0028,".cov, .log, .results",,results,8.697012206331633e-09,5956068.448689581,1,Multi,True
+OA_McDonald_36411363_3,Stim8hr,1000G EUR (GRCh37),EUR,0.0519,0.0028,".cov, .log, .results",,results,8.702058583247665e-09,5964106.021983431,1,Multi,True
+OA_McDonald_36411363_3,Stim48hr,1000G EUR (GRCh37),EUR,0.0518,0.0028,".cov, .log, .results",,results,8.69737374201683e-09,5955820.864608277,1,Multi,True
+SCZ_Pardiñas_29483656_1,Rest,1000G EUR (GRCh37),EUR,,,.log,"ValueError: After merging with reference panel LD, 0 SNPs remain.",run failed,,,0,EUR,False
+SCZ_Pardiñas_29483656_1,Stim8hr,1000G EUR (GRCh37),EUR,,,.log,"ValueError: After merging with reference panel LD, 0 SNPs remain.",run failed,,,0,EUR,False
+SCZ_Pardiñas_29483656_1,Stim48hr,1000G EUR (GRCh37),EUR,,,.log,"ValueError: After merging with reference panel LD, 0 SNPs remain.",run failed,,,0,EUR,False
+T2D_Xue_30054458_1,Rest,1000G EUR (GRCh37),EUR,0.0577,0.0044,".cov, .log, .results",,results,9.68390751360133e-09,5958338.606493161,2,Multi,True
+T2D_Xue_30054458_1,Stim8hr,1000G EUR (GRCh37),EUR,0.0577,0.0044,".cov, .log, .results",,results,9.676143213186742e-09,5963119.677824309,3,Multi,True
+T2D_Xue_30054458_1,Stim48hr,1000G EUR (GRCh37),EUR,0.0578,0.0044,".cov, .log, .results",,results,9.691728970579503e-09,5963848.16119594,3,Multi,True

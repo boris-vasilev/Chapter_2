@@ -1,0 +1,19 @@
+,Alzheimer's disease (proxy),Type 2 diabetes,Myocardial infarction,Rheumatoid arthritis (EUR),Rheumatoid arthritis (EAS),Autoimmune thyroid disease,Adult-onset asthma,Childhood-onset asthma,Atopic dermatitis,Systemic lupus erythematosus,Crohn's disease,Inflammatory bowel disease,Type 1 diabetes,Schizophrenia,Ischaemic stroke,Ulcerative colitis,Asthma (EAS),Osteoarthritis
+Alzheimer's disease (proxy),1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Type 2 diabetes,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+Myocardial infarction,0,0,1,0.030508,0.026201,0.026201,0.019481,0.047009,0.047009,0.02583,0.022472,0,0,0.010309,0,0,0,0
+Rheumatoid arthritis (EUR),0,0,0.030508,1,0.7013,0.7013,0.057047,0.057096,0.057096,0.051546,0.050198,0.0095238,0.010676,0.0039216,0,0,0,0
+Rheumatoid arthritis (EAS),0,0,0.026201,0.7013,1,1,0.012346,0.054645,0.054645,0.04878,0.04611,0.0080972,0.0093897,0,0,0,0,0
+Autoimmune thyroid disease,0,0,0.026201,0.7013,1,1,0.012346,0.054645,0.054645,0.04878,0.04611,0.0080972,0.0093897,0,0,0,0,0
+Adult-onset asthma,0,0,0.019481,0.057047,0.012346,0.012346,1,0.022449,0.022449,0.010695,0.0093458,0,0,0,0,0,0,0
+Childhood-onset asthma,0,0,0.047009,0.057096,0.054645,0.054645,0.022449,1,1,0.12641,0.11731,0.008,0.0042735,0.0045455,0,0,0,0
+Atopic dermatitis,0,0,0.047009,0.057096,0.054645,0.054645,0.022449,1,1,0.12641,0.11731,0.008,0.0042735,0.0045455,0,0,0,0
+Systemic lupus erythematosus,0,0,0.02583,0.051546,0.04878,0.04878,0.010695,0.12641,0.12641,1,0.85638,0.010638,0.0094162,0.0079365,0,0,0,0
+Crohn's disease,0,0,0.022472,0.050198,0.04611,0.04611,0.0093458,0.11731,0.11731,0.85638,1,0.15426,0.093972,0.0068376,0,0,0,0
+Inflammatory bowel disease,0,0,0,0.0095238,0.0080972,0.0080972,0,0.008,0.008,0.010638,0.15426,1,0.6092,0,0,0,0,0
+Type 1 diabetes,0,0,0,0.010676,0.0093897,0.0093897,0,0.0042735,0.0042735,0.0094162,0.093972,0.6092,1,0,0,0,0,0
+Schizophrenia,0,0,0.010309,0.0039216,0,0,0,0.0045455,0.0045455,0.0079365,0.0068376,0,0,1,0,0,0,0
+Ischaemic stroke,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0
+Ulcerative colitis,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0
+Asthma (EAS),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0
+Osteoarthritis,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
