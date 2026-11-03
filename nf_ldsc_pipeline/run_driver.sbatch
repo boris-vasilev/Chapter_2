@@ -16,4 +16,4 @@ export NXF_HOME=/rds/project/rds-csoP2nj6Y6Y/biv22/.nextflow
 export NXF_OPTS='-Xms1g -Xmx6g'
 export LC_ALL=C.UTF-8 LANG=C.UTF-8    # the JVM must read SCZ_Pardiñas
 
-nextflow run main.nf -profile csd3 -resume "$@"
+uv run nextflow run main.nf -profile csd3 -resume "$@"
