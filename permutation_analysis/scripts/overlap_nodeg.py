@@ -69,6 +69,84 @@ def jaccard(a: set, b: set) -> float:
     return len(a & b) / len(a | b) if (a or b) else float("nan")
 
 
+def load_inputs():
+    """Suppl metadata, the sig edge table and the raw (pre-|logFC|) edges per variant."""
+    meta = pl.read_csv(DATA / "DE_stats.suppl_table.csv", infer_schema_length=None).select(
+        pl.col("target_contrast").alias("cis_ensg"), "culture_condition",
+        "n_total_de_genes", "n_cells_target", "ontarget_significant")
+    sig = pl.read_csv(DATA / "DE_results_sig.csv")
+    return meta, sig, {v: knockdown_edges(sig, meta, k) for v, k in MIN_DEGS.items()}
+
+
+def load_traits():
+    """The 18 traits, each trait's anchors, and all coloc genes (excluded from the pool)."""
+    traits = pl.read_csv(REPO / "vis/diseases.csv").select("study", "trait", "group")
+    coloc = str(DATA / "coloc_dat.tsv")
+    real_anchors = {s: set(load_coloc_genes(coloc, "CD4", 0.8, s)) for s in traits["study"]}
+    return traits, real_anchors, set(load_coloc_genes(coloc, "CD4", 0.8))
+
+
+def neighbours(e: pl.DataFrame):
+    """trans -> its regulators and cis -> its targets. With min_k = 1, regulator /
+    target sets are unions of these."""
+    regs_of, tgts_of = {}, {}
+    for cis, trans in e.select("cis_ensg", "trans_ensg").iter_rows():
+        regs_of.setdefault(trans, set()).add(cis)
+        tgts_of.setdefault(cis, set()).add(trans)
+    return regs_of, tgts_of
+
+
+def expand(anchors, nb) -> set:
+    return set().union(*(nb.get(g, set()) for g in anchors))
+
+
+def matched_draws(e, cond, traits, real_anchors, all_coloc, n_draws, knn_k, seed, tag):
+    """Real sets and n_draws matched pseudo-anchor draws for every trait on one
+    edge set; degrees and matcher come from these edges. Returns (draw rows,
+    {study: (real regulators, real targets)}); `tag` is added to every row."""
+    out_deg, in_deg = degrees(e)
+    expr = load_expression(str(DATA / "screen_expression.tsv"), cond)
+    matcher = Matcher([g for g in expr if g not in all_coloc], {True: [], False: []},
+                      set(), out_deg, in_deg, expr, knn_k=knn_k)
+    regs_of, tgts_of = neighbours(e)
+    rows, real_sets = [], {}
+    for study, trait, group in traits.iter_rows():
+        real = real_anchors[study]
+        real_regs, real_tgts = expand(real, regs_of), expand(real, tgts_of)
+        assert real_regs == set(convergent_regulators(e, real))
+        assert real_tgts == set(convergent_targets(e, real))
+        unmeasured_with_edges = [g for g in real if g not in expr and (g in regs_of or g in tgts_of)]
+        assert not unmeasured_with_edges, f"unmeasured anchors with edges: {unmeasured_with_edges}"
+        real_sets[study] = (real_regs, real_tgts)
+        measured = sorted(g for g in real if matcher.is_measured(g))
+        base = tag | {"study": study, "trait": trait, "group": group, "condition": cond,
+                      "n_anchors": len(real), "n_anchors_drawn": len(measured),
+                      "real_regulators": len(real_regs), "real_targets": len(real_tgts)}
+        for d in range(1, n_draws + 1):
+            pseudo, _ = matcher.sample(measured, perm_rng(seed, d, cond))
+            regs, tgts = expand(pseudo, regs_of), expand(pseudo, tgts_of)
+            rows.append(base | {
+                "draw": d,
+                "reg_recovery": frac(regs, real_regs), "tgt_recovery": frac(tgts, real_tgts),
+                "reg_jaccard": jaccard(regs, real_regs), "tgt_jaccard": jaccard(tgts, real_tgts),
+                "pseudo_regulators": len(regs), "pseudo_targets": len(tgts)})
+    return rows, real_sets
+
+
+def summarise(draws: pl.DataFrame, ids: list) -> pl.DataFrame:
+    """One row per ids x set: real size, recovery median and 95% range, Jaccard, pseudo size."""
+    return pl.concat([
+        draws.group_by(ids, maintain_order=True).agg(
+            pl.lit(s).alias("set"),
+            pl.col(f"real_{s}").first().alias("real_size"),
+            pl.col(f"{p}_recovery").median().alias("recovery_median"),
+            pl.col(f"{p}_recovery").quantile(0.025).alias("recovery_q025"),
+            pl.col(f"{p}_recovery").quantile(0.975).alias("recovery_q975"),
+            pl.col(f"{p}_jaccard").median().alias("jaccard_median"),
+            pl.col(f"pseudo_{s}").median().alias("pseudo_size_median"))
+        for s, p in [("regulators", "reg"), ("targets", "tgt")]])
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -79,12 +157,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
 
     # --- 1. edge tables -----------------------------------------------------
-    meta = pl.read_csv(DATA / "DE_stats.suppl_table.csv", infer_schema_length=None).select(
-        pl.col("target_contrast").alias("cis_ensg"), "culture_condition",
-        "n_total_de_genes", "n_cells_target", "ontarget_significant")
-    sig = pl.read_csv(DATA / "DE_results_sig.csv")
-    raw = {v: knockdown_edges(sig, meta, k) for v, k in MIN_DEGS.items()}
-
+    meta, sig, raw = load_inputs()
     strong = pl.read_csv(DATA / "DE_results_strong.csv")
     if not same_rows(raw["deg75"], strong):
         raise SystemExit("deg75 does not reproduce DE_results_strong.csv: stopping")
@@ -106,61 +179,20 @@ def main() -> None:
     print(counts)
 
     # --- 2. matched pseudo-anchor overlap ------------------------------------
-    traits = pl.read_csv(REPO / "vis/diseases.csv").select("study", "trait", "group")
-    coloc = str(DATA / "coloc_dat.tsv")
-    all_coloc = set(load_coloc_genes(coloc, "CD4", 0.8))
-    real_anchors = {s: set(load_coloc_genes(coloc, "CD4", 0.8, s)) for s in traits["study"]}
-
+    traits, real_anchors, all_coloc = load_traits()
     draws = []
     for (variant, cond), e in edges.items():
-        out_deg, in_deg = degrees(e)
-        expr = load_expression(str(DATA / "screen_expression.tsv"), cond)
-        matcher = Matcher([g for g in expr if g not in all_coloc], {True: [], False: []},
-                          set(), out_deg, in_deg, expr, knn_k=args.knn_k)
-        # With min_k = 1, regulators / targets are unions of neighbour sets.
-        regs_of, tgts_of = {}, {}
-        for cis, trans in e.iter_rows():
-            regs_of.setdefault(trans, set()).add(cis)
-            tgts_of.setdefault(cis, set()).add(trans)
-        expand = lambda a, nb: set().union(*(nb.get(g, set()) for g in a))  # noqa: E731
-
-        for study, trait, group in traits.iter_rows():
-            real = real_anchors[study]
-            real_regs = set(convergent_regulators(e, real))
-            real_tgts = set(convergent_targets(e, real))
-            assert real_regs == expand(real, regs_of) and real_tgts == expand(real, tgts_of)
-            measured = sorted(g for g in real if matcher.is_measured(g))
-            unmeasured_with_edges = [g for g in real if g not in expr and (g in regs_of or g in tgts_of)]
-            assert not unmeasured_with_edges, f"unmeasured anchors with edges: {unmeasured_with_edges}"
-            base = {"study": study, "trait": trait, "group": group, "condition": cond,
-                    "variant": variant, "n_anchors": len(real), "n_anchors_drawn": len(measured),
-                    "real_regulators": len(real_regs), "real_targets": len(real_tgts)}
-            for d in range(1, args.n_draws + 1):
-                pseudo, _ = matcher.sample(measured, perm_rng(args.seed, d, cond))
-                regs, tgts = expand(pseudo, regs_of), expand(pseudo, tgts_of)
-                draws.append(base | {
-                    "draw": d,
-                    "reg_recovery": frac(regs, real_regs), "tgt_recovery": frac(tgts, real_tgts),
-                    "reg_jaccard": jaccard(regs, real_regs), "tgt_jaccard": jaccard(tgts, real_tgts),
-                    "pseudo_regulators": len(regs), "pseudo_targets": len(tgts)})
+        rows, _ = matched_draws(e, cond, traits, real_anchors, all_coloc, args.n_draws,
+                                args.knn_k, args.seed, {"variant": variant})
+        draws += rows
         print(f"[{variant} {cond}] done", file=sys.stderr)
-
-    draws = pl.DataFrame(draws)
+    draws = pl.DataFrame(draws).select("study", "trait", "group", "condition", "variant", pl.all()
+                                       .exclude("study", "trait", "group", "condition", "variant"))
     draws.write_csv(OUT / "overlap_draws.csv")
 
     # --- 3. summary: one row per trait x condition x set x variant -----------
     ids = ["study", "trait", "group", "condition", "variant", "n_anchors", "n_anchors_drawn"]
-    summary = pl.concat([
-        draws.group_by(ids, maintain_order=True).agg(
-            pl.lit(s).alias("set"),
-            pl.col(f"real_{name}").first().alias("real_size"),
-            pl.col(f"{p}_recovery").median().alias("recovery_median"),
-            pl.col(f"{p}_recovery").quantile(0.025).alias("recovery_q025"),
-            pl.col(f"{p}_recovery").quantile(0.975).alias("recovery_q975"),
-            pl.col(f"{p}_jaccard").median().alias("jaccard_median"),
-            pl.col(f"pseudo_{name}").median().alias("pseudo_size_median"))
-        for s, p, name in [("regulators", "reg", "regulators"), ("targets", "tgt", "targets")]])
-    summary.sort("study", "condition", "set", "variant").write_csv(OUT / "overlap_summary.csv")
+    summarise(draws, ids).sort("study", "condition", "set", "variant").write_csv(OUT / "overlap_summary.csv")
 
 
 if __name__ == "__main__":

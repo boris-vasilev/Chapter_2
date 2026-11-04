@@ -76,11 +76,14 @@ def main() -> None:
                        "real_size_nodeg", pct("recovery_median_nodeg").alias("nodeg_%"),
                        pct("recovery_q025_nodeg").alias("lo_n"), pct("recovery_q975_nodeg").alias("hi_n"))
                .sort("set", "trait"))
-        print("\nMedian across the 12 IMDs of per-trait median recovery (and of real set size)")
+        print("\nMedian across IMDs (non-empty real sets) of per-trait median recovery, and of real set size")
         print(w.filter(pl.col("group") == "IMD").group_by("set", "condition").agg(
-                  pl.col("recovery_median").is_not_null().sum().alias("n_traits"),
-                  pct("recovery_median").median().alias("deg75_%"),
-                  pct("recovery_median_nodeg").median().alias("nodeg_%"),
+                  # Empty real sets give NaN recovery, which polars sorts above every
+                  # number, so drop NaNs before the median.
+                  pl.col("recovery_median").is_not_nan().sum().alias("n_traits_deg75"),
+                  pl.col("recovery_median_nodeg").is_not_nan().sum().alias("n_traits_nodeg"),
+                  pct("recovery_median").drop_nans().median().alias("deg75_%"),
+                  pct("recovery_median_nodeg").drop_nans().median().alias("nodeg_%"),
                   pl.col("real_size").median().alias("real_size_deg75"),
                   pl.col("real_size_nodeg").median().alias("real_size_nodeg"),
                   pl.col("pseudo_size_median").median().alias("pseudo_deg75"),
