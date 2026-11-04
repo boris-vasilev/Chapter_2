@@ -6,8 +6,8 @@ From: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 %post
     cd /opt/env
-    UV_PROJECT_ENVIRONMENT=/opt/venv uv sync --frozen --no-install-project
-
+    UV_PROJECT_ENVIRONMENT=/opt/venv uv sync
+    
 %environment
     export PATH=/opt/venv/bin:$PATH
     export PYTHONNOUSERSITE=1
