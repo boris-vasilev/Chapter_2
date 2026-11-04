@@ -15,7 +15,7 @@ process EXTRACT_DE {
     script:
     def on_target = params.on_target ? '--on-target' : '--no-on-target'
     """
-    uv run python ${moduleDir}/../bin/extract_de_results.py --h5ad ${h5ad} --out DE_results.csv \
+    python ${moduleDir}/../bin/extract_de_results.py --h5ad ${h5ad} --out DE_results.csv \
         --padj-threshold ${params.padj} --z-thresh ${params.min_abs_z} \
         --min-degs ${params.min_de_genes} --min-cells ${params.min_cells} ${on_target}
     """
@@ -37,7 +37,7 @@ process MAKE_GENE_SETS {
 
     script:
     """
-    uv run python ${moduleDir}/../bin/make_gene_sets_coloc.py \
+    python ${moduleDir}/../bin/make_gene_sets_coloc.py \
         --de-results ${de} --coloc ${coloc} \
         --studies ${studies.collect { "'${it}'" }.join(' ')} \
         --conditions ${conditions.join(' ')} \
