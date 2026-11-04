@@ -9,8 +9,10 @@
 #SBATCH -t 24:00:00
 #SBATCH -o nf_driver_%j.log
 
-set -euo pipefail
+set +u
 source ~/.bash_profile
+set -euo pipefail
+
 # /home is full, so Nextflow's own files go on RDS.
 export NXF_HOME=/rds/project/rds-csoP2nj6Y6Y/biv22/.nextflow
 export NXF_OPTS='-Xms1g -Xmx6g'
