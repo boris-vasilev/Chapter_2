@@ -10,3 +10,5 @@ From: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 %environment
     export PATH=/opt/venv/bin:$PATH
     export PYTHONNOUSERSITE=1
+    export NUMBA_CACHE_DIR=/tmp/numba_cache    # numba needs a writable cache dir
+    export MPLCONFIGDIR=/tmp/matplotlib        # same for matplotlib
