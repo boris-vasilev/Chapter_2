@@ -1,0 +1,14 @@
+[project]
+name = "extract-de"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "anndata>=0.13.4",
+    "argparse>=1.4.0",
+    "h5py>=3.16.0",
+    "numpy>=2.5.4",
+    "pandas>=3.1.0",
+    "polars>=2.1.0",
+    "pyarrow>=26.0.0",
+    "scanpy>=1.12.4",
+]

@@ -1,0 +1,30 @@
+Bootstrap: docker
+From: continuumio/miniconda3
+
+%files
+    ldsc/environment3.yml /app/environment.yml
+    ldsc /app
+
+%post
+    mkdir -p /app
+    cd /app
+
+    # create conda environment
+    conda env create -f environment.yml
+
+    # initialize conda
+    conda init bash
+
+    echo "source /opt/conda/etc/profile.d/conda.sh && conda activate ldsc" >> /root/.bashrc
+
+%environment
+    # Make the ldsc conda env's python and tools the default for
+    # `apptainer exec` (which doesn't run %runscript or ~/.bashrc).
+    export PATH=/opt/conda/envs/ldsc/bin:/opt/conda/bin:$PATH
+    export CONDA_DEFAULT_ENV=ldsc
+    export CONDA_PREFIX=/opt/conda/envs/ldsc
+
+%runscript
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate ldsc
+    exec "$@"

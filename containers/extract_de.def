@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+%files
+    extract_de/pyproject.toml /opt/env/pyproject.toml
+    extract_de/uv.lock        /opt/env/uv.lock
+
+%post
+    cd /opt/env
+    UV_PROJECT_ENVIRONMENT=/opt/venv uv sync --frozen --no-install-project
+
+%environment
+    export PATH=/opt/venv/bin:$PATH
+    export PYTHONNOUSERSITE=1
