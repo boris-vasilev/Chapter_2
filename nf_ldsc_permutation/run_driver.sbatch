@@ -6,7 +6,7 @@
 #SBATCH -p icelake
 #SBATCH -c 1
 #SBATCH --mem=8000
-#SBATCH -t 2:00:00
+#SBATCH -t 12:00:00
 #SBATCH -o nf_driver_%j.log
 
 set +u
