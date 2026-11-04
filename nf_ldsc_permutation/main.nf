@@ -38,32 +38,33 @@ workflow {
         .combine(de).combine(expression)
         .map { row, d, e -> tuple(row, d, e, file(ws(params.coloc_dat))) }
     PERM_GENE_SETS(jobs)
-    if (params.gene_sets_only) return
-
-    // toList() waits for every gene-set job, so no chain starts before all real
-    // sets have passed the reference check. Then one chain per perm, given the
-    // perm's gene_sets directory in the task's work directory.
-    chains = PERM_GENE_SETS.out.toList().flatMap { done ->
-        done.collectMany { run ->
-            def (row, files) = run
-            [files].flatten()*.parent.unique().collect { d ->
-                def perm = "${row.study}/${d.parent.name}"
-                def meta = row + [res_dir: "${perm}/ldsc_results".toString(),
-                                  ld_dir: "${perm}/ld_scores/${row.cond}".toString()]
-                def sumstats = file(ws("${params.sumstats_dir}/${row.study}.sumstats.gz"), checkIfExists: true)
-                tuple(meta, d, sumstats)
+    // --gene_sets_only stops after the gene sets (validation).
+    if (!params.gene_sets_only) {
+        // toList() waits for every gene-set job, so no chain starts before all real
+        // sets have passed the reference check. Then one chain per perm, given the
+        // perm's gene_sets directory in the task's work directory.
+        chains = PERM_GENE_SETS.out.toList().flatMap { done ->
+            done.collectMany { run ->
+                def (row, files) = run
+                [files].flatten()*.parent.unique().collect { d ->
+                    def perm = "${row.study}/${d.parent.name}"
+                    def meta = row + [res_dir: "${perm}/ldsc_results".toString(),
+                                      ld_dir: "${perm}/ld_scores/${row.cond}".toString()]
+                    def sumstats = file(ws("${params.sumstats_dir}/${row.study}.sumstats.gz"), checkIfExists: true)
+                    tuple(meta, d, sumstats)
+                }
             }
         }
-    }
-    LDSC_CHAIN(chains)
+        LDSC_CHAIN(chains)
 
-    // Collect from work-directory paths laid out as the published tree.
-    gene_set_files = PERM_GENE_SETS.out.map { it[1] }.flatten().map { f -> [tail(f, 4), f] }
-    chain_files = LDSC_CHAIN.out[1].flatten().filter { it.name.endsWith('.results') }
-        .mix(LDSC_CHAIN.out[2])
-        .map { f -> [tail(f, 4), f] }
-    manifest = gene_set_files.mix(chain_files)
-        .map { rel, f -> "${rel}\t${f}\n" }
-        .collectFile(name: 'manifest.tsv', sort: true)
-    COLLECT(manifest, runs.collect { s, cs -> "'${s}:${cs.join(',')}'" }.join(' '), root)
+        // Collect from work-directory paths laid out as the published tree.
+        gene_set_files = PERM_GENE_SETS.out.map { it[1] }.flatten().map { f -> [tail(f, 4), f] }
+        chain_files = LDSC_CHAIN.out[1].flatten().filter { it.name.endsWith('.results') }
+            .mix(LDSC_CHAIN.out[2])
+            .map { f -> [tail(f, 4), f] }
+        manifest = gene_set_files.mix(chain_files)
+            .map { rel, f -> "${rel}\t${f}\n" }
+            .collectFile(name: 'manifest.tsv', sort: true)
+        COLLECT(manifest, runs.collect { s, cs -> "'${s}:${cs.join(',')}'" }.join(' '), root)
+    }
 }
