@@ -41,3 +41,5 @@ slurm-*.out
 *.swp
 *.swo
 
+# Data
+data/
