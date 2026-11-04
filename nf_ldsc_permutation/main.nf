@@ -14,7 +14,7 @@ workflow {
     // Edge filters (variant) plus matching options name the output folder.
     def tag = "${variant()}_bins${params.n_degree_bins}-${params.n_expr_bins}" +
               "_knn${params.knn_k}_seed${params.seed}"
-    def root = "${ws(params.perm_root)}/${tag}".toString()
+    def root = "${params.perm_root}/${tag}".toString()
     if (root.contains('/permutations/heritability/'))
         error "Stage 2 outputs in data/permutations/heritability/ are read-only"
 
