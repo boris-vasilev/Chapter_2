@@ -1,2 +1,2 @@
-apptainer build --sandbox ldsc39_env.sif ldsc/
-apptainer build --sandbox extract_de_env.sif extract_de/
+apptainer build --sandbox ldsc39_env.sif ldsc.def
+apptainer build --sandbox extract_de_env.sif extract_de.def

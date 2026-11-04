@@ -3,7 +3,6 @@ From: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 %files
     extract_de/pyproject.toml /opt/env/pyproject.toml
-    extract_de/uv.lock        /opt/env/uv.lock
 
 %post
     cd /opt/env
