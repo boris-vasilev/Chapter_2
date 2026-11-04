@@ -1,4 +1,4 @@
 [submodule "ldsc"]
 	path = containers/ldsc
-	url = https://github.com/CBIIT/ldsc.git
+	url = https://github.com/boris-vasilev/ldsc.git
 	branch = ldsc39
