@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 """Supplementary figure: effect of the >= 75-DEG knockdown filter (no new analysis).
 
-  A  out-degree CCDF per condition: knockdowns kept by deg75 (solid) vs the
-     knockdowns only nodeg adds (dashed); edges as used for matching
+  A  knockdowns with >= 1 edge and edges per condition, stacked: kept by deg75
+     (solid) and added without the filter (hatched); edges as used for matching
      (|z| >= 2, |logFC| >= 0.5, no self-edges)
-  B  real regulator / target set size, deg75 (x) vs nodeg (y)
+  B  real regulator / target set size, deg75 (x) vs nodeg (y); target points
+     more than 2x off the diagonal are labelled, and the anchors whose added
+     knockdowns cause them are printed
   C  pseudo-anchor recovery of the real set (median, 95% range), deg75 vs nodeg
 B and C: one point per trait x condition; colour = condition, filled = IMD,
 open = non-IMD control. Edges are rebuilt with overlap_nodeg.knockdown_edges;
 B and C read overlap_summary.csv.
 
 Writes fig_s_deg_filter.{pdf,png} to data/permutations/overlap_nodeg/ and prints
-the median out-degree of deg75 vs added knockdowns per condition.
+the panel A numbers, the median out-degree of deg75 vs added knockdowns, and the
+labelled panel B points with their causal anchors.
 
   uv run python figures/fig_s_deg_filter.py
 """
@@ -25,41 +28,52 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 HERE = Path(__file__).resolve()
 sys.path[:0] = [str(HERE.parents[2] / "vis"), str(HERE.parents[1] / "scripts")]
-from common import (COND_COLORS, COND_LABEL, CONDS, GROUP_SHORT, PRINT_W, PT,  # noqa: E402
-                    axes_in, panel_label, plain_log_axis, print_style, save)
-from overlap_nodeg import DATA, MIN_DEGS, OUT, condition_edges, knockdown_edges  # noqa: E402
+from common import (COND_COLORS, COND_LABEL, COND_SHORT, CONDS, GROUP_SHORT, PRINT_W, PT,  # noqa: E402
+                    _plain_number, axes_in, panel_label, plain_log_axis, print_style, save)
+from overlap_nodeg import (DATA, MIN_DEGS, OUT, REPO, condition_edges,  # noqa: E402
+                           knockdown_edges, load_coloc_genes)
 
 SETS = ["regulators", "targets"]
 SET_LABEL = {"regulators": "Regulators", "targets": "Targets"}
 GROUP_FILLED = {"IMD": True, "non-IMD": False}  # filled vs open marker
+KINDS = {"deg75": "≥ 75 DEGs", "added": "Added without filter"}
+OFF_DIAGONAL = 2.0  # label target points with nodeg / deg75 size beyond this factor
 
 
-def out_degrees() -> pl.DataFrame:
-    """Out-degree per knockdown x condition, tagged kept (deg75) or added (nodeg only)."""
+def load_edges():
+    """nodeg edges per condition (deg75 edges are the subset whose knockdown is
+    kept by deg75), each tagged with its knockdown's kind; and Ensembl -> symbol."""
     meta = pl.read_csv(DATA / "DE_stats.suppl_table.csv", infer_schema_length=None).select(
         pl.col("target_contrast").alias("cis_ensg"), "culture_condition",
         "n_total_de_genes", "n_cells_target", "ontarget_significant")
     sig = pl.read_csv(DATA / "DE_results_sig.csv")
-    deg = {v: pl.concat([condition_edges(knockdown_edges(sig, meta, k), c, 0.5)
-                         .group_by("cis_ensg").len("out_degree").with_columns(pl.lit(c).alias("condition"))
-                         for c in CONDS]) for v, k in MIN_DEGS.items()}
-    added = deg["nodeg"].join(deg["deg75"], on=["cis_ensg", "condition"], how="anti")
-    return pl.concat([deg["deg75"].with_columns(pl.lit("deg75").alias("kind")),
-                      added.with_columns(pl.lit("added").alias("kind"))])
-
-
-def ccdf(ax, deg: pl.DataFrame) -> None:
+    raw = {v: knockdown_edges(sig, meta, k) for v, k in MIN_DEGS.items()}
+    edges = []
     for c in CONDS:
-        for kind, ls in [("deg75", "-"), ("added", "--")]:
-            v = np.sort(deg.filter(pl.col("condition") == c, pl.col("kind") == kind)["out_degree"].to_numpy())
-            ax.step(v, 1 - np.arange(v.size) / v.size, where="post", color=COND_COLORS[c], ls=ls)
-    ax.set(xscale="log", yscale="log", xlabel="Out-degree (genes changed)",
-           ylabel="Fraction of knockdowns ≥ x")
-    plain_log_axis(ax, "x")
-    plain_log_axis(ax, "y")
+        kept = condition_edges(raw["deg75"], c, 0.5)["cis_ensg"].unique()
+        edges.append(condition_edges(raw["nodeg"], c, 0.5).with_columns(
+            pl.lit(c).alias("condition"),
+            pl.when(pl.col("cis_ensg").is_in(kept.implode())).then(pl.lit("deg75"))
+              .otherwise(pl.lit("added")).alias("kind")))
+    symbols = dict(sig.select("cis_ensg", "cis_gene").unique("cis_ensg").iter_rows())
+    return pl.concat(edges), symbols
+
+
+def bars(axes, counts: pl.DataFrame) -> None:
+    """Stacked bars per condition: kept (solid) under added (hatched)."""
+    for ax, col, title in zip(axes, ["knockdowns", "edges"], ["Knockdowns", "Edges"]):
+        for i, c in enumerate(CONDS):
+            row = dict(counts.filter(pl.col("condition") == c).select("kind", col).iter_rows())
+            ax.bar(i, row["deg75"], width=0.7, color=COND_COLORS[c], lw=0)
+            ax.bar(i, row["added"], bottom=row["deg75"], width=0.7, facecolor="white",
+                   edgecolor=COND_COLORS[c], hatch="//////", lw=0.6)
+        ax.set_xticks(range(len(CONDS)), [COND_SHORT[c] for c in CONDS])
+        ax.yaxis.set_major_formatter(_plain_number)
+        ax.set_title(title, fontsize=PT["title"])
 
 
 def thin_decades(ax, axis) -> None:
@@ -96,16 +110,39 @@ def wide(summary: pl.DataFrame) -> pl.DataFrame:
     return d.join(n, on=keys, suffix="_nodeg")
 
 
+def off_diagonal(w: pl.DataFrame, edges: pl.DataFrame, symbols: dict) -> pl.DataFrame:
+    """Target points > OFF_DIAGONAL x off the diagonal, with the anchors whose
+    added knockdowns contribute the targets that only nodeg has."""
+    traits = pl.read_csv(REPO / "vis/diseases.csv").select("study", "abbrev")
+    flagged = (w.filter(pl.col("set") == "targets", pl.col("real_size") > 0)
+                .with_columns((pl.col("real_size_nodeg") / pl.col("real_size")).alias("ratio"))
+                .filter((pl.col("ratio") > OFF_DIAGONAL) | (pl.col("ratio") < 1 / OFF_DIAGONAL))
+                .join(traits, on="study"))
+    rows = []
+    for r in flagged.iter_rows(named=True):
+        anchors = load_coloc_genes(str(DATA / "coloc_dat.tsv"), "CD4", 0.8, r["study"])
+        e = edges.filter(pl.col("condition") == r["condition"], pl.col("cis_ensg").is_in(anchors))
+        new = set(e["trans_ensg"]) - set(e.filter(pl.col("kind") == "deg75")["trans_ensg"])
+        for g, sub in e.filter(pl.col("kind") == "added").group_by("cis_ensg"):
+            rows.append(r | {"anchor": g[0], "symbol": symbols.get(g[0]), "anchor_out_degree": sub.height,
+                             "new_targets_from_anchor": len(new & set(sub["trans_ensg"])),
+                             "new_targets_total": len(new)})
+    return pl.DataFrame(rows)
+
+
 def main() -> None:
-    deg = out_degrees()
+    edges, symbols = load_edges()
     w = wide(pl.read_csv(OUT / "overlap_summary.csv"))
+    counts = (edges.group_by("condition", "kind")
+                   .agg(pl.col("cis_ensg").n_unique().alias("knockdowns"), pl.len().alias("edges")))
+    deg = edges.group_by("condition", "kind", "cis_ensg").len("out_degree")
+    flags = off_diagonal(w, edges, symbols)
 
     with print_style():
         fig = plt.figure(figsize=(PRINT_W, 4.75))
-        # A: CCDF
-        a = axes_in(fig, 0.62, 2.95, 1.75, 1.45)
-        ccdf(a, deg)
-        panel_label(fig, 0.05, 4.68, "A", "Out-degree of knockdowns")
+        # A: knockdowns and edges, kept vs added
+        bars([axes_in(fig, 0.45, 2.95, 0.75, 1.2), axes_in(fig, 1.85, 2.95, 0.75, 1.2)], counts)
+        panel_label(fig, 0.05, 4.68, "A", "Knockdowns and edges")
         # B: real set sizes (log), zero-size sets cannot be shown
         panel_label(fig, 2.75, 4.68, "B", "Real set size")
         for i, s in enumerate(SETS):
@@ -120,6 +157,11 @@ def main() -> None:
             ax.set_title(SET_LABEL[s], fontsize=PT["title"])
             ax.set_xlabel("≥ 75 DEGs")
             ax.set_ylabel("No DEG filter" if i == 0 else "")
+            if s == "targets" and flags.height:
+                for r in flags.unique(["study", "condition"]).iter_rows(named=True):
+                    ax.annotate(f"{r['abbrev']} {COND_SHORT[r['condition']]}",
+                                (r["real_size"], r["real_size_nodeg"]), xytext=(0, 7),
+                                textcoords="offset points", ha="center", fontsize=PT["tick"])
         # C: recovery
         panel_label(fig, 0.05, 2.45, "C", "Pseudo-anchor recovery of the real set")
         for i, s in enumerate(SETS):
@@ -133,20 +175,28 @@ def main() -> None:
             ax.set_ylabel("No DEG filter" if i == 0 else "")
         # Shared legend: condition colour, IMD / control fill.
         fig.legend(handles=[Line2D([], [], color=COND_COLORS[c], lw=1.2, label=COND_LABEL[c]) for c in CONDS]
-                   + [Line2D([], [], color="#52514e", ls="-", label="A: ≥ 75 DEGs"),
-                      Line2D([], [], color="#52514e", ls="--", label="A: added without filter")]
+                   + [Patch(facecolor="#52514e", lw=0, label=f"A: {KINDS['deg75']}"),
+                      Patch(facecolor="white", edgecolor="#52514e", hatch="//////", lw=0.6,
+                            label=f"A: {KINDS['added'].lower()}")]
                    + [Line2D([], [], ls="", marker="o", ms=4, mec="#52514e", mew=0.7,
                              mfc="#52514e" if GROUP_FILLED[g] else "white", label=GROUP_SHORT[g])
                       for g in GROUP_FILLED],
                    loc="lower left", bbox_to_anchor=(4.65 / PRINT_W, 0.5 / 4.75))
         save(fig, "fig_s_deg_filter", OUT, exact=True)
 
-    print("Median out-degree per knockdown (|logFC| >= 0.5 edges)")
-    with pl.Config(tbl_rows=-1):
+    order = pl.col("condition").replace_strict({c: i for i, c in enumerate(CONDS)})
+    with pl.Config(tbl_rows=-1, tbl_cols=-1, tbl_width_chars=200):
+        print("Panel A: knockdowns with >= 1 edge and edges (|logFC| >= 0.5)")
+        print(counts.pivot(on="kind", index="condition", values=["knockdowns", "edges"]).sort(order))
+        print("Median out-degree per knockdown")
         print(deg.group_by("condition", "kind").agg(pl.len().alias("knockdowns"),
                                                      pl.col("out_degree").median().alias("median_out_degree"))
               .pivot(on="kind", index="condition", values=["knockdowns", "median_out_degree"])
-              .sort(pl.col("condition").replace_strict({c: i for i, c in enumerate(CONDS)})))
+              .sort(order))
+        print(f"Panel B: target points > {OFF_DIAGONAL:g}x off the diagonal, by anchor with an added knockdown")
+        print(flags.select("abbrev", "condition", "real_size", "real_size_nodeg", "anchor", "symbol",
+                           "anchor_out_degree", "new_targets_from_anchor", "new_targets_total")
+              if flags.height else "none")
     zero = w.filter((pl.col("real_size") == 0) | (pl.col("real_size_nodeg") == 0))
     print(f"Panel B omits {zero.height} trait x condition x set rows with an empty real set")
 
