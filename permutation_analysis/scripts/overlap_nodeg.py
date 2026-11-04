@@ -100,14 +100,28 @@ def expand(anchors, nb) -> set:
     return set().union(*(nb.get(g, set()) for g in anchors))
 
 
+def screen_matcher(e, cond, all_coloc, knn_k):
+    """Matcher with degrees from edge set e and the condition's screen expression.
+    The pool is measured non-coloc genes; unmeasured anchors are not drawn (no
+    gene-coordinate files locally), so the unmeasured pool is empty."""
+    out_deg, in_deg = degrees(e)
+    expr = load_expression(str(DATA / "screen_expression.tsv"), cond)
+    return Matcher([g for g in expr if g not in all_coloc], {True: [], False: []},
+                   set(), out_deg, in_deg, expr, knn_k=knn_k), expr
+
+
+def pseudo_anchor_sets(matcher, real, cond, n_draws, seed):
+    """Measured real anchors and their draws 1..n_draws (seeds perm_rng(seed, d, cond))."""
+    measured = sorted(g for g in real if matcher.is_measured(g))
+    return measured, [matcher.sample(measured, perm_rng(seed, d, cond))[0]
+                      for d in range(1, n_draws + 1)]
+
+
 def matched_draws(e, cond, traits, real_anchors, all_coloc, n_draws, knn_k, seed, tag):
     """Real sets and n_draws matched pseudo-anchor draws for every trait on one
     edge set; degrees and matcher come from these edges. Returns (draw rows,
     {study: (real regulators, real targets)}); `tag` is added to every row."""
-    out_deg, in_deg = degrees(e)
-    expr = load_expression(str(DATA / "screen_expression.tsv"), cond)
-    matcher = Matcher([g for g in expr if g not in all_coloc], {True: [], False: []},
-                      set(), out_deg, in_deg, expr, knn_k=knn_k)
+    matcher, expr = screen_matcher(e, cond, all_coloc, knn_k)
     regs_of, tgts_of = neighbours(e)
     rows, real_sets = [], {}
     for study, trait, group in traits.iter_rows():
@@ -118,12 +132,11 @@ def matched_draws(e, cond, traits, real_anchors, all_coloc, n_draws, knn_k, seed
         unmeasured_with_edges = [g for g in real if g not in expr and (g in regs_of or g in tgts_of)]
         assert not unmeasured_with_edges, f"unmeasured anchors with edges: {unmeasured_with_edges}"
         real_sets[study] = (real_regs, real_tgts)
-        measured = sorted(g for g in real if matcher.is_measured(g))
+        measured, pseudo_sets = pseudo_anchor_sets(matcher, real, cond, n_draws, seed)
         base = tag | {"study": study, "trait": trait, "group": group, "condition": cond,
                       "n_anchors": len(real), "n_anchors_drawn": len(measured),
                       "real_regulators": len(real_regs), "real_targets": len(real_tgts)}
-        for d in range(1, n_draws + 1):
-            pseudo, _ = matcher.sample(measured, perm_rng(seed, d, cond))
+        for d, pseudo in enumerate(pseudo_sets, start=1):
             regs, tgts = expand(pseudo, regs_of), expand(pseudo, tgts_of)
             rows.append(base | {
                 "draw": d,
