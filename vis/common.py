@@ -28,11 +28,25 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 DATA = ROOT / "data"
 RESULTS = ROOT / "results"
-VARIANT = os.environ.get(
-    "CH2_VARIANT", "deg75_cells50_ot1_p0.05_z2.0_lfc0.5_h40.8_k1-1_w10000_snp1000")
-LDSC_DIR = RESULTS / "ldsc" / VARIANT
-PERM_DIR = RESULTS / "ldsc_permutation" / (VARIANT + "_bins4-5_knn20_seed42")
-FIG_DIR = ROOT / "figures2" / VARIANT.split("_")[0]   # temporary, e.g. figures2/deg75/
+# Design folder names under results/ldsc/. VARIANT is the one in use; the
+# design-comparison scripts (vis/permutation/*deg_filter*) read both.
+DESIGNS = {"deg0": "deg0_cells50_ot1_p0.05_z2.0_lfc0.5_h40.8_k1-1_w10000_snp1000",
+           "deg75": "deg75_cells50_ot1_p0.05_z2.0_lfc0.5_h40.8_k1-1_w10000_snp1000"}
+VARIANT = os.environ.get("CH2_VARIANT", DESIGNS["deg75"])
+
+
+def ldsc_dir(variant):
+    return RESULTS / "ldsc" / variant
+
+
+def perm_dir(variant):
+    return RESULTS / "ldsc_permutation" / (variant + "_bins4-5_knn20_seed42")
+
+
+LDSC_DIR = ldsc_dir(VARIANT)
+PERM_DIR = perm_dir(VARIANT)
+FIGURES2 = ROOT / "figures2"
+FIG_DIR = FIGURES2 / VARIANT.split("_")[0]   # temporary, e.g. figures2/deg75/
 BUILD_DIR = ROOT / "build" / VARIANT                  # staging, copied into FIG_DIR
 
 CONDS = ["Rest", "Stim8hr", "Stim48hr"]

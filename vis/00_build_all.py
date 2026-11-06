@@ -9,7 +9,11 @@ inputs come from LDSC_DIR / PERM_DIR and outputs go to FIG_DIR.
 
 1. Empties FIG_DIR and the staging folder build/<VARIANT>/.
 2. Runs the figure scripts (each writes to staging; the permutation-null
-   plots go straight to FIG_DIR/permutation/, skipped if PERM_DIR is absent).
+   plots and the matched-null scripts in permutation/ write straight to
+   FIG_DIR/permutation/, skipped if PERM_DIR is absent; fig_s_matching_check
+   is skipped if its inputs outside results/ are missing). The deg0 vs deg75
+   comparison (permutation/*deg_filter*) always runs and writes to
+   figures2/comparison/, outside FIG_DIR.
 3. Copies the chapter outputs into FIG_DIR/{main,supp,data}/ under their
    figure numbers (MANIFEST below), plus NOTES_overview.md from notes/.
 4. Writes FIG_DIR/INDEX.md and FIG_DIR/contact_sheet.pdf.
@@ -31,6 +35,17 @@ from common import BUILD_DIR, FIG_DIR, HERE, PERM_DIR, VARIANT
 
 STAGE = BUILD_DIR
 PERM = "plot_permutation_null.py"   # in heritability/; writes to FIG_DIR/permutation
+P = "permutation"   # matched-null scripts; write to FIG_DIR/permutation (no --out-dir)
+# script -> output file stems in FIG_DIR/permutation (for the index)
+P_OUTPUTS = {
+    "fig_5_matched_null.py": ["fig_5_matched_null"],
+    "fig_s_null_histograms.py": ["fig_s_null_histograms"],
+    "table_s_matched_null.py": ["table_s_matched_null"],
+    "fig_s_matching_check.py": ["fig_s_matching_check"],
+}
+P_COMPARISON = ["fig_s_deg_filter.py", "table_s_deg_filter.py"]   # -> figures2/comparison
+sys.path.insert(0, str(HERE / P))
+from pcommon import MATCHING_INPUTS  # noqa: E402
 NOTES_SRC = HERE.parent / "notes" / "NOTES_overview.md"
 NOTES_H_SRC = HERE.parent / "notes" / "NOTES_heritability.md"
 H = "heritability"   # subfolder for the heritability scripts, staging and outputs
@@ -51,6 +66,8 @@ RUNS = [
     [f"{H}/04_fig_s_scatter.py"],
     [f"{H}/05_numbers_for_text.py"],
     [f"{H}/{PERM}"],
+    *[[f"{P}/{f}"] for f in P_OUTPUTS],
+    *[[f"{P}/{f}"] for f in P_COMPARISON],
 ]
 
 SEC_TRAITS = "Traits and anchors"
@@ -306,16 +323,25 @@ def run_scripts(schematic):
     for argv in RUNS:
         if argv[0] == "07_fig_2_1.py" and schematic:
             argv = argv + ["--schematic", schematic]
+        script = Path(argv[0]).name
+        needs_perm = argv[0] == f"{H}/{PERM}" or script in P_OUTPUTS
+        if needs_perm and not PERM_DIR.is_dir():
+            print(f"WARNING: skipping {argv[0]}: no permutation results at "
+                  f"{PERM_DIR}", flush=True)
+            continue
+        missing = [str(f) for f in MATCHING_INPUTS if not f.exists()]
+        if script == "fig_s_matching_check.py" and missing:
+            print(f"WARNING: skipping {argv[0]}: inputs outside results/ missing: "
+                  f"{', '.join(missing)}", flush=True)
+            continue
         if argv[0] == f"{H}/{PERM}":
-            if not PERM_DIR.is_dir():
-                print(f"WARNING: skipping {argv[0]}: no permutation results at "
-                      f"{PERM_DIR}", flush=True)
-                continue
-            out = FIG_DIR / "permutation"
+            out = ["--out-dir", str(FIG_DIR / "permutation")]
+        elif argv[0].startswith(f"{P}/"):
+            out = []   # paths fixed by pcommon / FIGURES2
         else:
-            out = STAGE / H if argv[0].startswith(f"{H}/") else STAGE
+            out = ["--out-dir", str(STAGE / H if argv[0].startswith(f"{H}/") else STAGE)]
         print(f"$ uv run {' '.join(argv)}", flush=True)
-        subprocess.run([sys.executable, *argv, "--out-dir", str(out)],
+        subprocess.run([sys.executable, *argv, *out],
                        cwd=HERE, check=True, stdout=subprocess.DEVNULL)
 
 
@@ -347,6 +373,13 @@ def index_rows():
         rows.append(("Permutation null", str(png.relative_to(FIG_DIR)), SEC_HERIT,
                      "Matched-anchor S-LDSC permutation null with the real value marked.",
                      f"uv run {H}/{PERM}", VARIANT))
+    for script, stems in P_OUTPUTS.items():
+        for f in sorted((FIG_DIR / "permutation").iterdir() if (FIG_DIR / "permutation").is_dir()
+                        else []):
+            if f.is_file() and any(f.stem.startswith(s) for s in stems):
+                rows.append(("Matched null", str(f.relative_to(FIG_DIR)), SEC_HERIT,
+                             "Matched-anchor permutation null (Fig. 5 and supplementary).",
+                             f"uv run {P}/{script}", VARIANT))
     return rows
 
 

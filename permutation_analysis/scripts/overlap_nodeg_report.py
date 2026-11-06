@@ -20,8 +20,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import polars as pl  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
-from fig_common import SET_COLOURS  # noqa: E402
+# fig_common.py moved to vis/permutation/pcommon.py; it imports vis/common.py,
+# which sets the chapter rcParams, so reset to matplotlib's defaults as before.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "vis" / "permutation"))
+from pcommon import SET_COLOURS  # noqa: E402
+matplotlib.rcdefaults()
 
 OUT = Path(__file__).resolve().parents[2] / "data/permutations/overlap_nodeg"
 HIGHLIGHT = {"AITD", "ASTCO"}
