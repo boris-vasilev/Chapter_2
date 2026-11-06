@@ -1,15 +1,20 @@
 """Shared paths, disease metadata, palette, axis formatting and loaders for
 the chapter 2 figures.
 
-Gene sets are read from ``{data}/gene_sets/<variant>`` with the pipeline's
-``{study}_{condition}_{annot}.txt`` naming; disease display names and the
-IMD / non-IMD split come from ``diseases.csv`` next to this file.
+The analysis design is one setting, VARIANT: the folder name under
+results/ldsc/ (env var CH2_VARIANT; default the deg75 design). Gene sets are
+read from ``LDSC_DIR/gene_sets`` with the pipeline's
+``{study}_{condition}_{annot}.txt`` naming and S-LDSC output from
+``LDSC_DIR/ldsc_results``; disease display names and the IMD / non-IMD split
+come from ``diseases.csv`` next to this file.
 
-Scripts write to ``chapter2/build/<variant>/`` (staging); ``00_build_all.py``
-copies the chapter outputs from there into ``figures/`` under their figure
-numbers.
+    CH2_VARIANT=deg0_cells50_... uv run 00_build_all.py
+
+Scripts write to ``build/<VARIANT>/`` (staging); ``00_build_all.py`` copies the
+chapter outputs from there into ``FIG_DIR`` under their figure numbers.
 """
 
+import os
 import re
 from pathlib import Path
 
@@ -20,11 +25,15 @@ from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 import polars as pl
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[1]
-DATA = REPO / "data"
-FIG_DIR = HERE.parent / "figures"
-BUILD_DIR = HERE.parent / "build"
-DEFAULT_VARIANT = "coloc_thr0.5"
+ROOT = HERE.parent
+DATA = ROOT / "data"
+RESULTS = ROOT / "results"
+VARIANT = os.environ.get(
+    "CH2_VARIANT", "deg75_cells50_ot1_p0.05_z2.0_lfc0.5_h40.8_k1-1_w10000_snp1000")
+LDSC_DIR = RESULTS / "ldsc" / VARIANT
+PERM_DIR = RESULTS / "ldsc_permutation" / (VARIANT + "_bins4-5_knn20_seed42")
+FIG_DIR = ROOT / "figures2" / VARIANT.split("_")[0]   # temporary, e.g. figures2/deg75/
+BUILD_DIR = ROOT / "build" / VARIANT                  # staging, copied into FIG_DIR
 
 CONDS = ["Rest", "Stim8hr", "Stim48hr"]
 COND_LABEL = {"Rest": "Rest", "Stim8hr": "Stim 8 h", "Stim48hr": "Stim 48 h"}
@@ -178,7 +187,7 @@ def read_gene_set(path):
 
 def load_gene_sets(gene_sets_dir=None):
     """dict[(study, cond, annot)] = set of Ensembl ids."""
-    gene_sets_dir = Path(gene_sets_dir or DATA / "gene_sets" / "coloc")
+    gene_sets_dir = Path(gene_sets_dir or LDSC_DIR / "gene_sets")
     annot_re = "|".join(sorted(ANNOTS, key=len, reverse=True))
     pat = re.compile(rf"^(?P<study>.+)_(?P<cond>[^_]+)_(?P<annot>{annot_re})\.txt$")
     sets = {}
@@ -235,7 +244,7 @@ def load_edges(de_path=None, min_abs_logfc=0.0):
     """Perturbation -> response edges exactly as the gene sets use them.
 
     ``min_abs_logfc`` mirrors make_gene_sets_coloc.py --min-abs-logfc
-    (0 for data/gene_sets/coloc, 0.5 for coloc_thr0.5).
+    (the ``lfc`` field of VARIANT).
     """
     return (
         pl.read_csv(de_path or DATA / "DE_results_strong.csv",
@@ -249,34 +258,29 @@ def load_edges(de_path=None, min_abs_logfc=0.0):
     )
 
 
-# Gene-set variants. "coloc_thr<x>" adds |logFC| >= x to the edge filter
-# (anchors unchanged, H4 > 0.8); "coloc" has no |logFC| filter. The chapter
-# uses coloc_thr0.5 (verified: reproduced exactly by H4 > 0.8 and
-# |logFC| >= 0.5).
-def variant_config(variant):
-    m = re.fullmatch(r"coloc(?:_thr(?P<lfc>[\d.]+))?", variant)
+# The |logFC| edge filter is the "lfc<x>" field of VARIANT (lfc0.5 matches
+# the old coloc_thr0.5 design: H4 > 0.8 and |logFC| >= 0.5).
+def variant_config():
+    m = re.search(r"(?:^|_)lfc(?P<lfc>[\d.]+)(?:_|$)", VARIANT)
     if not m:
-        raise SystemExit(f"Unknown variant {variant!r}; expected coloc or coloc_thr<x>")
+        raise SystemExit(f"CH2_VARIANT={VARIANT!r} has no lfc<x> field")
     return {
-        "gene_sets_dir": DATA / "gene_sets" / variant,
-        "ldsc_dir": DATA / "ldsc_results" / variant,
-        "min_abs_logfc": float(m.group("lfc") or 0.0),
-        "out_dir": BUILD_DIR / variant,
+        "gene_sets_dir": LDSC_DIR / "gene_sets",
+        "ldsc_dir": LDSC_DIR / "ldsc_results",
+        "min_abs_logfc": float(m.group("lfc")),
+        "out_dir": BUILD_DIR,
     }
 
 
 def add_variant_args(ap):
-    ap.add_argument("--variant", default=DEFAULT_VARIANT,
-                    help=f"Gene-set variant: coloc_thr<x> (|logFC| >= x; default "
-                         f"{DEFAULT_VARIANT}) or coloc (no |logFC| filter). Sets "
-                         "gene-set dir, S-LDSC dir, edge filter and output dir together.")
     ap.add_argument("--out-dir", default=None,
-                    help="Override the output directory (default: build/<variant>/).")
+                    help=f"Override the output directory (default: {BUILD_DIR}). "
+                         "The design itself is set with the CH2_VARIANT env var.")
 
 
 def resolve_variant(args):
     """Fill args.gene_sets_dir / ldsc_dir / min_abs_logfc / out_dir in place."""
-    cfg = variant_config(args.variant)
+    cfg = variant_config()
     args.gene_sets_dir = cfg["gene_sets_dir"]
     args.ldsc_dir = cfg["ldsc_dir"]
     args.min_abs_logfc = cfg["min_abs_logfc"]
@@ -335,7 +339,7 @@ def color_ticklabels(labels, order, diseases):
 
 def save(fig, stem, out_dir=None, exact=False):
     """Write PDF + PNG. ``exact`` keeps the figure size (no tight cropping)."""
-    out_dir = Path(out_dir or BUILD_DIR / DEFAULT_VARIANT)
+    out_dir = Path(out_dir or BUILD_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     with plt.rc_context({"savefig.bbox": "standard" if exact else "tight"}):
         for ext in ("pdf", "png"):

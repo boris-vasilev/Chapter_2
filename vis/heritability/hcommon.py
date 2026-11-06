@@ -13,8 +13,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from common import (BUILD_DIR, DEFAULT_VARIANT, add_variant_args,  # noqa: E402,F401
+from common import (BUILD_DIR, add_variant_args,  # noqa: E402,F401
                     load_diseases, resolve_variant)
+# The design setting and every input / output root, shared with common.py
+# (single source: set CH2_VARIANT to switch design).
+from common import (FIG_DIR, LDSC_DIR, PERM_DIR, RESULTS, ROOT,  # noqa: E402,F401
+                    VARIANT)
 
 # Column order used on every heritability figure (brief: anchors, regulators,
 # targets). Colours are the chapter's ANNOT_COLORS.
@@ -41,9 +45,9 @@ def add_args(ap):
 
 def resolve(args):
     """Variant paths as in common.resolve_variant, but staging in a
-    heritability/ subfolder of build/<variant>/ unless --out-dir is given."""
+    heritability/ subfolder of build/<VARIANT>/ unless --out-dir is given."""
     if args.out_dir is None:
-        args.out_dir = str(BUILD_DIR / args.variant / "heritability")
+        args.out_dir = str(BUILD_DIR / "heritability")
     args = resolve_variant(args)
     args.long = Path(args.long or args.out_dir / LONG_CSV)
     return args

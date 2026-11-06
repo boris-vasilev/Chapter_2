@@ -43,3 +43,4 @@ slurm-*.out
 
 # Data
 data/
+results/

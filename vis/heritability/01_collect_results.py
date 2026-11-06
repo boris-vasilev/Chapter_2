@@ -3,7 +3,7 @@
 
 One row per trait x condition x annotation (anchors, regulators, targets),
 including cells with no estimate (status column says why). Reads
-``data/ldsc_results/<variant>/<study>/<cond>_combined.{results,log}`` and the
+``LDSC_DIR/ldsc_results/<study>/<cond>_combined.{results,log}`` and the
 gene sets; never re-runs S-LDSC.
 
 tau* (standardised effect size, Gazal et al. 2017):
@@ -77,15 +77,30 @@ def parse_log(path):
     }
 
 
-def category_map(study, cond, res):
-    """annot -> .results row for the custom annotations in this run."""
+def kept_annots(combine_txt):
+    """Annotations combine_annots.py kept ("[KEEP] <annot>: ...") in this run."""
+    return re.findall(r"\[KEEP\] (\S+):", combine_txt.read_text())
+
+
+def category_map(study, cond, res, run_dir):
+    """annot -> .results row for the custom annotations in this run.
+
+    An unnamed "L2_1" column (single surviving annotation) is identified from
+    the pipeline's <cond>_combined.combine.txt when present (newer runs), else
+    from SINGLE_COLUMN (older runs, which did not write that file)."""
     custom = res[res.Category.str.endswith("L2_1")]
     out = {}
     for _, r in custom.iterrows():
         if r.Category == "L2_1":
-            if (study, cond) not in SINGLE_COLUMN:
-                raise SystemExit(f"{study} {cond}: unnamed L2_1 column not in SINGLE_COLUMN")
-            out[SINGLE_COLUMN[(study, cond)]] = r
+            combine = Path(run_dir) / f"{cond}_combined.combine.txt"
+            kept = kept_annots(combine) if combine.exists() else []
+            if len(kept) == 1:
+                out[kept[0]] = r
+            elif (study, cond) in SINGLE_COLUMN:
+                out[SINGLE_COLUMN[(study, cond)]] = r
+            else:
+                raise SystemExit(f"{study} {cond}: unnamed L2_1 column; not in "
+                                 f"SINGLE_COLUMN and {combine.name} lists {kept}")
         else:
             out[r.Category[: -len("L2_1")]] = r
     return out
@@ -111,7 +126,7 @@ def collect(ldsc_dir, sets, diseases):
                 run.update(status="results", h2_over_M=h2_over_m,
                            M_implied=run["h2_obs"] / h2_over_m,
                            n_custom=int(res.Category.str.endswith("L2_1").sum()))
-                fitted = category_map(study, cond, res)
+                fitted = category_map(study, cond, res, d)
             else:
                 run.update(status="run failed" if log else "not run",
                            h2_over_M=np.nan, M_implied=np.nan, n_custom=0)

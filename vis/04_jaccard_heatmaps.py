@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Jaccard overlap of gene sets between diseases (Fig. 2.1C, 2.6A, S2).
 
-Outputs (in build/<variant>/):
+Outputs (in build/<VARIANT>/):
   * jaccard_anchors - coloc genes; one set per disease, condition-independent
     (drawn into Fig. 2.1C by 07_fig_2_1.py via draw_anchor_jaccard)
   * jaccard_{regulators|targets}_{cond|all}[_excess] - one condition

@@ -2,13 +2,18 @@
 """Rebuild every Chapter 2 figure, table and data file from scratch.
 
     uv run 00_build_all.py [--schematic PATH]   # default: assets/ch2_schematic.png
+    CH2_VARIANT=<results/ldsc folder name> uv run 00_build_all.py
 
-1. Empties figures/ and the staging folder build/<variant>/.
-2. Runs the figure scripts (variant coloc_thr0.5; each writes to staging).
-3. Copies the chapter outputs into figures/{main,supp,data}/ under their
+The design is the single setting VARIANT in common.py (env var CH2_VARIANT);
+inputs come from LDSC_DIR / PERM_DIR and outputs go to FIG_DIR.
+
+1. Empties FIG_DIR and the staging folder build/<VARIANT>/.
+2. Runs the figure scripts (each writes to staging; the permutation-null
+   plots go straight to FIG_DIR/permutation/, skipped if PERM_DIR is absent).
+3. Copies the chapter outputs into FIG_DIR/{main,supp,data}/ under their
    figure numbers (MANIFEST below), plus NOTES_overview.md from notes/.
-4. Writes figures/INDEX.md and figures/contact_sheet.pdf.
-5. Fails if any file in figures/ is not in the index, or vice versa.
+4. Writes FIG_DIR/INDEX.md and FIG_DIR/contact_sheet.pdf.
+5. Fails if any file in FIG_DIR is not in the index, or vice versa.
 """
 
 import argparse
@@ -22,10 +27,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
-from common import BUILD_DIR, DEFAULT_VARIANT, FIG_DIR, HERE
+from common import BUILD_DIR, FIG_DIR, HERE, PERM_DIR, VARIANT
 
-VARIANT = DEFAULT_VARIANT
-STAGE = BUILD_DIR / VARIANT
+STAGE = BUILD_DIR
+PERM = "plot_permutation_null.py"   # in heritability/; writes to FIG_DIR/permutation
 NOTES_SRC = HERE.parent / "notes" / "NOTES_overview.md"
 NOTES_H_SRC = HERE.parent / "notes" / "NOTES_heritability.md"
 H = "heritability"   # subfolder for the heritability scripts, staging and outputs
@@ -45,6 +50,7 @@ RUNS = [
     [f"{H}/03_fig_s_forest.py"],
     [f"{H}/04_fig_s_scatter.py"],
     [f"{H}/05_numbers_for_text.py"],
+    [f"{H}/{PERM}"],
 ]
 
 SEC_TRAITS = "Traits and anchors"
@@ -300,7 +306,14 @@ def run_scripts(schematic):
     for argv in RUNS:
         if argv[0] == "07_fig_2_1.py" and schematic:
             argv = argv + ["--schematic", schematic]
-        out = STAGE / H if argv[0].startswith(f"{H}/") else STAGE
+        if argv[0] == f"{H}/{PERM}":
+            if not PERM_DIR.is_dir():
+                print(f"WARNING: skipping {argv[0]}: no permutation results at "
+                      f"{PERM_DIR}", flush=True)
+                continue
+            out = FIG_DIR / "permutation"
+        else:
+            out = STAGE / H if argv[0].startswith(f"{H}/") else STAGE
         print(f"$ uv run {' '.join(argv)}", flush=True)
         subprocess.run([sys.executable, *argv, "--out-dir", str(out)],
                        cwd=HERE, check=True, stdout=subprocess.DEVNULL)
@@ -330,6 +343,10 @@ def index_rows():
         rows.append((fig, f"data/{dst}", "Data", desc, cmd, VARIANT))
     for num, f, desc in DOCS:
         rows.append((num, f, "—", desc, "uv run 00_build_all.py", VARIANT))
+    for png in sorted((FIG_DIR / "permutation").glob("*/*.png")):
+        rows.append(("Permutation null", str(png.relative_to(FIG_DIR)), SEC_HERIT,
+                     "Matched-anchor S-LDSC permutation null with the real value marked.",
+                     f"uv run {H}/{PERM}", VARIANT))
     return rows
 
 
@@ -444,7 +461,7 @@ def verify(rows):
     if missing or extra:
         raise SystemExit(f"Index mismatch. Missing: {sorted(missing)}; "
                          f"not indexed: {sorted(extra)}")
-    print(f"OK: {len(present)} files in figures/, all indexed and on the contact sheet.")
+    print(f"OK: {len(present)} files in {FIG_DIR}, all indexed and on the contact sheet.")
 
 
 def main():

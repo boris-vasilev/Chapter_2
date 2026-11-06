@@ -31,6 +31,7 @@ process LDSC_CHAIN {
     def r = refs(meta)
     def bin = "${moduleDir}/../bin"
     def annots = 'regulators_H4 targets_H4 H4_genes'
+    def gene_files = annots.tokenize().collect { "'${gene_sets}/${meta.study}_${meta.cond}_${it}.txt'" }.join(' ')
     def ld = "${meta.ld_dir}/${meta.cond}_combined"
     def out = "${meta.res_dir}/${meta.cond}_combined"
     """
@@ -45,7 +46,9 @@ process LDSC_CHAIN {
 
     python ${bin}/combine_annots.py --in-dir annot --out-dir '${meta.ld_dir}' \
         --condition ${meta.cond} --names ${annots} \
-        --min-snps ${params.min_snps_per_annot} > '${out}.combine.txt' 2> combine.err || {
+        --min-snps ${params.min_snps_per_annot} \
+        --gene-sets ${gene_files} \
+        --min-genes ${params.min_genes_per_annot} > '${out}.combine.txt' 2> combine.err || {
         cat combine.err >&2
         grep -q 'refusing to write' combine.err && exit 3
         exit 1

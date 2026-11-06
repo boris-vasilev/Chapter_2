@@ -1,0 +1,19 @@
+Disease,Class,Ancestry,GWAS cite key,N cases,N controls,CD4+ eQTL studies,Coloc genes (PP.H4 > 0.8)
+Autoimmune thyroid disease,IMD,EUR,saevarsdottir2020,"30,234","725,172",7,63
+Crohn's disease,IMD,EUR,delange2017,"12,194","28,072",7,28
+Childhood-onset asthma,IMD,EUR,ferreira2019,"13,962","300,671",7,27
+Type 1 diabetes,IMD,Multi,robertson2021,"22,153","37,374",7,26
+Rheumatoid arthritis (EUR),IMD,EUR,ishigaki2022,"22,350","74,823",7,25
+Inflammatory bowel disease,IMD,EUR,delange2017,"25,042","34,915",5,24
+Adult-onset asthma,IMD,EUR,ferreira2019,"26,582","300,671",5,23
+Atopic dermatitis,IMD,EUR,buduaggrey2023,"60,653","804,329",7,18
+Rheumatoid arthritis (EAS),IMD,EAS,ishigaki2022,"11,025","162,608",7,16
+Asthma (EAS),IMD,EAS,sakaue2021,"13,015","162,933",6,9
+Ulcerative colitis,IMD,EUR,delange2017,"12,366","33,609",6,9
+Systemic lupus erythematosus,IMD,EUR,bentham2015,"5,201","9,066",5,7
+Type 2 diabetes,non-IMD,Multi,xue2018,"62,892","596,424",5,21
+Myocardial infarction,non-IMD,Multi,sakaue2021,"35,909","587,120",5,20
+Schizophrenia,non-IMD,EUR,pardinas2018,"40,675","64,643",5,17
+Osteoarthritis,non-IMD,Multi,mcdonald2022,"133,506","335,938",5,5
+Alzheimer's disease (proxy),non-IMD,EUR,jansen2019,"71,880","383,378",2,3
+Ischaemic stroke,non-IMD,Multi,sakaue2021,"34,593","624,214",2,3

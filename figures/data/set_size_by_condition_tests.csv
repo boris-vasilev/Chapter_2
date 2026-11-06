@@ -1,3 +1,0 @@
-annot,n_diseases,friedman_p,wilcoxon_Stim8hr_vs_Rest_p,median_log2fc_Stim8hr,wilcoxon_Stim48hr_vs_Rest_p,median_log2fc_Stim48hr,excluded,note
-regulators_H4,18,1.2162741958159252e-06,7.62939453125e-06,0.6274701286272575,0.015753291787738457,0.21398827749317106,,"diseases not independent (shared anchors, duplicated traits)"
-targets_H4,12,0.01685120125994759,0.00146484375,0.9422106535153417,0.6220703125,0.20028718133775003,Alzheimer's disease (proxy); Asthma (EAS); Ischaemic stroke; Osteoarthritis; Type 2 diabetes; Ulcerative colitis,"diseases not independent (shared anchors, duplicated traits)"

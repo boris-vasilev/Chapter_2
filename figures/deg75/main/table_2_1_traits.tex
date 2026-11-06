@@ -1,0 +1,38 @@
+\begin{table}[tbp]
+\centering
+\caption[GWAS traits and colocalised genes]{\textbf{GWAS traits and colocalised genes.} For each disease: ancestry, GWAS, numbers of cases and controls, the number of CD4$^+$ T-cell eQTL studies in which the GWAS signal colocalised with an eQTL (PP.H4 $>$ 0.8), and the number of colocalised genes (anchors) across those studies. Immune-mediated diseases are listed first, then non-IMD controls, each by number of colocalised genes.}
+\label{tab:traits}
+\vspace{4pt}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X l l r r r r@{}}
+\toprule
+Disease & Ancestry & GWAS & Cases & Controls & CD4$^+$ eQTL & Coloc \\
+ & & & & & studies & genes \\
+\midrule
+\multicolumn{7}{@{}l}{\textit{Immune-mediated diseases}} \\
+Autoimmune thyroid disease & EUR & \cite{saevarsdottir2020} & 30,234 & 725,172 & 7 & 63 \\
+Crohn's disease & EUR & \cite{delange2017} & 12,194 & 28,072 & 7 & 28 \\
+Childhood-onset asthma & EUR & \cite{ferreira2019} & 13,962 & 300,671 & 7 & 27 \\
+Type 1 diabetes & Multi & \cite{robertson2021} & 22,153 & 37,374 & 7 & 26 \\
+Rheumatoid arthritis (EUR) & EUR & \cite{ishigaki2022} & 22,350 & 74,823 & 7 & 25 \\
+Inflammatory bowel disease & EUR & \cite{delange2017} & 25,042 & 34,915 & 5 & 24 \\
+Adult-onset asthma & EUR & \cite{ferreira2019} & 26,582 & 300,671 & 5 & 23 \\
+Atopic dermatitis & EUR & \cite{buduaggrey2023} & 60,653 & 804,329 & 7 & 18 \\
+Rheumatoid arthritis (EAS) & EAS & \cite{ishigaki2022} & 11,025 & 162,608 & 7 & 16 \\
+Asthma (EAS) & EAS & \cite{sakaue2021} & 13,015 & 162,933 & 6 & 9 \\
+Ulcerative colitis & EUR & \cite{delange2017} & 12,366 & 33,609 & 6 & 9 \\
+Systemic lupus erythematosus & EUR & \cite{bentham2015} & 5,201 & 9,066 & 5 & 7 \\
+\addlinespace
+\multicolumn{7}{@{}l}{\textit{Non-IMD controls}} \\
+Type 2 diabetes & Multi & \cite{xue2018} & 62,892 & 596,424 & 5 & 21 \\
+Myocardial infarction & Multi & \cite{sakaue2021} & 35,909 & 587,120 & 5 & 20 \\
+Schizophrenia & EUR & \cite{pardinas2018} & 40,675 & 64,643 & 5 & 17 \\
+Osteoarthritis & Multi & \cite{mcdonald2022} & 133,506 & 335,938 & 5 & 5 \\
+Alzheimer's disease (proxy) & EUR & \cite{jansen2019} & 71,880 & 383,378 & 2 & 3 \\
+Ischaemic stroke & Multi & \cite{sakaue2021} & 34,593 & 624,214 & 2 & 3 \\
+\bottomrule
+\end{tabularx}
+\par\smallskip
+{\footnotesize\raggedright Traits from the same GWAS share samples: Crohn's disease, Inflammatory bowel disease, Ulcerative colitis (\cite{delange2017}); Childhood-onset asthma, Adult-onset asthma (\cite{ferreira2019}); Rheumatoid arthritis (EUR), Rheumatoid arthritis (EAS) (\cite{ishigaki2022}).\par}
+\end{table}

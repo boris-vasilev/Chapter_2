@@ -220,9 +220,15 @@ def main() -> None:
             all_perperm.append(df)
             all_summary.append(sdf)
             if args.plot:
-                from plot_permutation_null import plot_condition
-                plot_condition(df, cond, ANNOTS, STATS, 30, study,
-                               out / f"permutation_null_{cond}.png")
+                try:
+                    from plot_permutation_null import plot_condition
+                except ImportError:
+                    # Moved to Chapter_2/vis/heritability/ (reads the published
+                    # results); plots are made there, not in the pipeline.
+                    plot_condition = None
+                if plot_condition is not None:
+                    plot_condition(df, cond, ANNOTS, STATS, 30, study,
+                                   out / f"permutation_null_{cond}.png")
             with pl.Config(tbl_cols=-1, tbl_width_chars=200, float_precision=3):
                 print(f"[{study} {cond}]")
                 print(sdf.select("annot", "n_perm_completed", "real_enrichment",
