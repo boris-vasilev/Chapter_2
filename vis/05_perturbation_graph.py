@@ -7,6 +7,8 @@ knockdowns, so expanded sets are large.
   A. Out-degree (DE genes per knockdown) per condition, as a complementary
      CDF P(X >= k) on log-log axes; the largest hubs are labelled.
   B. In-degree (knockdowns that change a gene), same format.
+     A, B: each anchor (union of H4 genes over all traits) is a red point
+     on its condition's curve; anchors with degree 0 are counted in a note.
   C. Genome coverage: % of reference SNPs in the anchor / regulator /
      target annotations, from Prop._SNPs in the S-LDSC .results files;
      violins (density on log10 scale), one point per disease, median bar.
@@ -40,7 +42,7 @@ import polars as pl
 from matplotlib.lines import Line2D
 
 from common import (ANNOT_COLORS, ANNOT_LABEL, ANNOTS, COND_COLORS,
-                    COND_LABEL, COND_SHORT, CONDS, DATA, GROUP_COLORS,
+                    COND_LABEL, COND_SHORT, CONDS, GROUP_COLORS,
                     GROUP_LABEL, GROUPS, H4_THRESHOLD, PRINT_W, PT, axes_in,
                     color_ticklabels, disease_order, load_coloc, load_diseases,
                     load_edges, load_gene_sets, name, panel_label,
@@ -48,6 +50,7 @@ from common import (ANNOT_COLORS, ANNOT_LABEL, ANNOTS, COND_COLORS,
                     size_table, universe, add_variant_args, resolve_variant)
 
 N_HUB_LABELS = 3
+ANCHOR_COLOR = "#d62728"  # anchor points on the degree CCDFs (A, B)
 SHARE_LABEL_MIN = 0.5
 FIG_H = 7.1
 DOT = dict(s=9, edgecolor="white", linewidth=0.5, zorder=3)
@@ -60,11 +63,29 @@ def degrees(edges, node_col, other_col):
             .to_pandas())
 
 
-def ccdf(ax, deg, name_col, xlabel):
+def ccdf(ax, deg, name_col, xlabel, anchor_deg=None, zero_label=None):
     for cond in CONDS:
         k = np.sort(deg.loc[deg.culture_condition == cond, "degree"].values)
         p = 1 - np.arange(len(k)) / len(k)          # P(X >= k)
         ax.step(k, p, where="post", color=COND_COLORS[cond], lw=1.2)
+        if anchor_deg is not None:
+            # Anchors on this condition's curve: y = P(X >= k) over the curve's
+            # genes. Degree 0 cannot sit on the log axis (counted in the note).
+            a = anchor_deg.loc[(anchor_deg.culture_condition == cond)
+                               & (anchor_deg.degree > 0), "degree"].values
+            ax.scatter(a, (k[None, :] >= a[:, None]).mean(axis=1), s=5,
+                       color=ANCHOR_COLOR, lw=0, alpha=0.6, zorder=3)
+    if anchor_deg is not None:
+        n0 = anchor_deg[anchor_deg.degree == 0].groupby("culture_condition").size()
+        # Below the x-axis label: the plot area has no free corner.
+        ax.text(0, -0.25, "●", transform=ax.transAxes, ha="left", va="top",
+                fontsize=PT["tick"] - 1, color=ANCHOR_COLOR, alpha=0.6)
+        ax.annotate(f"anchors (n = {anchor_deg.anchor.nunique()}); "
+                    f"{zero_label} 0, not shown:\n" + ", ".join(
+                        f"{COND_SHORT[c]} {n0.get(c, 0)}" for c in CONDS),
+                    (0, -0.25), xycoords="axes fraction", xytext=(6, 0),
+                    textcoords="offset points", ha="left", va="top",
+                    fontsize=PT["tick"] - 1, color="#52514e", linespacing=1.1)
     ax.set_xscale("log")
     ax.set_yscale("log")
     plain_log_axis(ax, "x")
@@ -196,8 +217,33 @@ def coverage_panel(ax, cov, diseases):
               loc="upper left", handletextpad=0.2, labelspacing=0.3)
 
 
+def anchor_degrees(edges, anchor_ids):
+    """Out- and in-degree of every anchor per condition (0 when absent), from
+    the same edges as the CCDFs."""
+    rows = []
+    for cond in CONDS:
+        e = edges.filter(pl.col("culture_condition") == cond)
+        out = dict(e.group_by("cis_ensg").agg(pl.col("trans_ensg").n_unique()).iter_rows())
+        inn = dict(e.group_by("trans_ensg").agg(pl.col("cis_ensg").n_unique()).iter_rows())
+        rows += [{"culture_condition": cond, "anchor": g, "out_degree": out.get(g, 0),
+                  "in_degree": inn.get(g, 0)} for g in sorted(anchor_ids)]
+    return pd.DataFrame(rows)
+
+
+def anchor_percentiles(anchor_deg, deg, col):
+    """Percentile of each anchor with degree > 0 within all genes' degree
+    distribution (the CCDF's genes, degree >= 1; ties count half)."""
+    out = {}
+    for cond in CONDS:
+        d = np.sort(deg.loc[deg.culture_condition == cond, "degree"].values)
+        a = anchor_deg.loc[(anchor_deg.culture_condition == cond) & (anchor_deg[col] > 0), col].values
+        lo, hi = np.searchsorted(d, a, "left"), np.searchsorted(d, a, "right")
+        out[cond] = 100 * (lo + hi) / 2 / len(d)
+    return out
+
+
 def draw_figure(order, diseases, wide, anchors, reg_universe, out_deg, in_deg,
-                cov, share):
+                cov, share, anchor_deg=None):
     W, H = PRINT_W, FIG_H
     fig = plt.figure(figsize=(W, H))
     n = len(order)
@@ -214,8 +260,12 @@ def draw_figure(order, diseases, wide, anchors, reg_universe, out_deg, in_deg,
     ax_a = axes_in(fig, 0.58, row_y, 1.45, row_h)
     ax_b = axes_in(fig, 2.62, row_y, 1.45, row_h)
     ax_c = axes_in(fig, 4.68, row_y, 1.56, row_h)
-    ccdf(ax_a, out_deg, "cis_gene", "Genes changed per knockdown, k")
-    ccdf(ax_b, in_deg, "trans_gene", "Knockdowns changing the gene, k")
+    ad = {c: None if anchor_deg is None else anchor_deg.rename(columns={c: "degree"})
+          for c in ("out_degree", "in_degree")}
+    ccdf(ax_a, out_deg, "cis_gene", "Genes changed per knockdown, k",
+         ad["out_degree"], "out-degree")
+    ccdf(ax_b, in_deg, "trans_gene", "Knockdowns changing the gene, k",
+         ad["in_degree"], "in-degree")
     coverage_panel(ax_c, cov, diseases)
     top = row_y + row_h + 0.3
     panel_label(fig, 0.02, top, "A", "Out-degree")
@@ -298,13 +348,12 @@ def draw_figure(order, diseases, wide, anchors, reg_universe, out_deg, in_deg,
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--de-results", default=DATA / "DE_results_strong.csv")
     add_variant_args(ap)
     args = resolve_variant(ap.parse_args())
     out_dir = Path(args.out_dir)
 
     diseases = load_diseases()
-    edges = load_edges(args.de_results, args.min_abs_logfc)
+    edges = load_edges(args.min_abs_logfc)
     out_deg = degrees(edges, "cis_gene", "trans_ensg")
     in_deg = degrees(edges, "trans_gene", "cis_ensg")
     reg_universe = {c: len(universe(edges, c)[0]) for c in CONDS}
@@ -331,9 +380,16 @@ def main():
     share = largest_anchor_share(edges, sets, diseases, symbols)
     share.to_csv(out_dir / "largest_anchor_share.csv", index=False)
 
+    # Anchors: union of H4 genes over all traits (the design's gene sets).
+    anchor_ids = set().union(*(g for (s, c, a), g in sets.items()
+                               if a == "H4_genes" and s in diseases.index))
+    anchor_deg = anchor_degrees(edges, anchor_ids)
+    pct_out = anchor_percentiles(anchor_deg, out_deg, "out_degree")
+    pct_in = anchor_percentiles(anchor_deg, in_deg, "in_degree")
+
     with print_style():
         fig = draw_figure(order, diseases, wide, anchors, reg_universe,
-                          out_deg, in_deg, cov, share)
+                          out_deg, in_deg, cov, share, anchor_deg)
     save(fig, "perturbation_graph_and_sets", out_dir, exact=True)
 
     # Numbers quoted in the text.
@@ -344,6 +400,7 @@ def main():
         od = out_deg.loc[out_deg.culture_condition == cond, "degree"]
         idg = in_deg.loc[in_deg.culture_condition == cond, "degree"]
         c = cov[cov.condition == cond].groupby("annot").pct_snps.median()
+        ad_c = anchor_deg[anchor_deg.culture_condition == cond]
         rows.append({
             "condition": cond,
             "regulator_universe": reg_universe[cond],
@@ -358,6 +415,15 @@ def main():
             "pct_snps_median_anchors": c.get("H4_genes"),
             "pct_snps_median_regulators": c.get("regulators_H4"),
             "pct_snps_median_targets": c.get("targets_H4"),
+            "anchors_total": len(anchor_ids),
+            "anchors_out_degree_gt0": int((ad_c.out_degree > 0).sum()),
+            "anchors_in_degree_gt0": int((ad_c.in_degree > 0).sum()),
+            "anchor_out_degree_pctile_median": np.median(pct_out[cond]),
+            "anchor_out_degree_pctile_q25": np.percentile(pct_out[cond], 25),
+            "anchor_out_degree_pctile_q75": np.percentile(pct_out[cond], 75),
+            "anchor_in_degree_pctile_median": np.median(pct_in[cond]),
+            "anchor_in_degree_pctile_q25": np.percentile(pct_in[cond], 25),
+            "anchor_in_degree_pctile_q75": np.percentile(pct_in[cond], 75),
         })
     nums = pd.DataFrame(rows)
     nums.to_csv(out_dir / "overview_numbers.csv", index=False)

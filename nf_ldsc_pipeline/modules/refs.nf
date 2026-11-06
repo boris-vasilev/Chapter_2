@@ -20,7 +20,7 @@ def refs(row) {
 
 // Output folder name, derived from every filter so that runs cannot collide.
 def variant() {
-    "deg${params.min_de_genes}_cells${params.min_cells}_ot${params.on_target ? 1 : 0}" +
+    "hub${params.max_degs_quantile}_deg${params.min_de_genes}_cells${params.min_cells}_ot${params.on_target ? 1 : 0}" +
     "_p${params.padj}_z${params.min_abs_z}_lfc${params.min_abs_logfc}_h4${params.h4_threshold}" +
     "_k${params.min_reg_k}-${params.min_tgt_k}_w${params.window_size}_snp${params.min_snps_per_annot}"
 }

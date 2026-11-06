@@ -14,7 +14,7 @@ import numpy as np
 
 from hcommon import (FDR, FITTED, H_ANNOT_LABEL, H_ANNOTS, add_args, load_long,
                      resolve)
-from common import COND_SHORT, CONDS, GROUPS, GROUP_SHORT
+from common import COND_SHORT, CONDS, GROUPS, GROUP_SHORT, VARIANT
 
 GROUP_COL = {"IMD": "IMD", "non-IMD": "control"}
 
@@ -31,7 +31,7 @@ def section(long):
     fit["sig_t"] = fit.tau_star_sig.astype(bool)
     neg = fit[fit.neg_prop_h2.astype(bool)]
     L = ["## Heritability", "",
-         f"S-LDSC, variant coloc_thr0.5 (baselineLD v2.2 + anchors, regulators and "
+         f"S-LDSC, design {VARIANT} (baselineLD v2.2 + anchors, regulators and "
          f"targets fitted jointly per trait x condition). {len(fit)} fitted sets of "
          f"{len(long)} trait x condition x annotation cells. Significant = BH FDR < "
          f"{FDR}, corrected within expanded sets (regulators + targets, "

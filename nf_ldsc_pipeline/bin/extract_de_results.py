@@ -28,6 +28,14 @@ def main():
     )
 
     parser.add_argument(
+        "--max-degs-quantile",
+        type=float,
+        default=1.0,
+        help="Maximum quantile of n_total_de_genes to keep. For dropping out-hubs with a large number of DEGs, set to a value < 1.0."
+        "(default 1.0, keeping all).",
+    )
+
+    parser.add_argument(
         "--min-cells",
         type=int,
         default=50,
@@ -57,11 +65,29 @@ def main():
         print(f"  on-target KD obs : {mask.sum()} / {len(mask)}")
         mask &= adata.obs["ontarget_significant"].astype(bool).to_numpy()
 
-    # strong perturbation filters
+    # effective perturbation filters
     mask &= (adata.obs["n_total_de_genes"] >= args.min_degs).to_numpy()
     mask &= (adata.obs["n_cells_target"] >= args.min_cells).to_numpy()
 
-    print(f"  after strong-perturbation filter: {mask.sum()} obs")
+    # Drop perturbations with a large number of DEGs (hubs) per culture_condition.
+    q = args.max_degs_quantile
+    n_degs = adata.obs["n_total_de_genes"].to_numpy()
+    cond = adata.obs["culture_condition"].astype(str).to_numpy()
+    genes = adata.obs["target_contrast_gene_name"].astype(str).to_numpy()
+    hub = np.zeros_like(mask)
+    print(f"  hub filter (q={q}, per culture_condition):")
+    for c in np.unique(cond[mask]):
+        in_c = mask & (cond == c)
+        cutoff = np.quantile(n_degs[in_c], q)
+        hub_c = in_c & (n_degs > cutoff)
+        hub |= hub_c
+        print(
+            f"    {c}: cutoff {cutoff:.0f} DEGs, "
+            f"dropping {hub_c.sum()} / {in_c.sum()} obs: {sorted(genes[hub_c])}"
+        )
+    mask &= ~hub
+
+    print(f"  after effective perturbation and hub filter: {mask.sum()} obs")
 
     on_target = adata[mask].copy()
     del adata
@@ -96,27 +122,31 @@ def main():
         return on_target.layers[name][keep]
 
     # Exclude on-target row (cis_ensg == trans_ensg) from targets
-    de_filtered = pl.DataFrame(
-        {
-            "padj": layer("adj_p_value"),
-            "base_DESeq2": layer("baseMean"),
-            "lfcSE": layer("lfcSE"),
-            "logFC": layer("log_fc"),
-            "zscore": layer("zscore"),
-        }
-    ).with_columns(
-        [
-            obs_df["culture_condition"].gather(obs_idx).alias("culture_condition"),
-            obs_df["target_contrast"].gather(obs_idx).alias("cis_ensg"),
-            obs_df["target_contrast_gene_name"].gather(obs_idx).alias("cis_gene"),
-            obs_df["ontarget_effect_size"].gather(obs_idx).alias("perturb_eff"),
-            obs_df["target_baseMean"].gather(obs_idx).alias("cis_baseMean"),
-            obs_df["n_total_de_genes"].gather(obs_idx).alias("n_total_de_genes"),
-            obs_df["n_cells_target"].gather(obs_idx).alias("n_cells_target"),
-            var_df["gene_ids"].gather(var_idx).alias("trans_ensg"),
-            var_df["gene_name"].gather(var_idx).alias("trans_gene"),
-        ]
-    ).filter(pl.col("cis_ensg") != pl.col("trans_ensg"))
+    de_filtered = (
+        pl.DataFrame(
+            {
+                "padj": layer("adj_p_value"),
+                "base_DESeq2": layer("baseMean"),
+                "lfcSE": layer("lfcSE"),
+                "logFC": layer("log_fc"),
+                "zscore": layer("zscore"),
+            }
+        )
+        .with_columns(
+            [
+                obs_df["culture_condition"].gather(obs_idx).alias("culture_condition"),
+                obs_df["target_contrast"].gather(obs_idx).alias("cis_ensg"),
+                obs_df["target_contrast_gene_name"].gather(obs_idx).alias("cis_gene"),
+                obs_df["ontarget_effect_size"].gather(obs_idx).alias("perturb_eff"),
+                obs_df["target_baseMean"].gather(obs_idx).alias("cis_baseMean"),
+                obs_df["n_total_de_genes"].gather(obs_idx).alias("n_total_de_genes"),
+                obs_df["n_cells_target"].gather(obs_idx).alias("n_cells_target"),
+                var_df["gene_ids"].gather(var_idx).alias("trans_ensg"),
+                var_df["gene_name"].gather(var_idx).alias("trans_gene"),
+            ]
+        )
+        .filter(pl.col("cis_ensg") != pl.col("trans_ensg"))
+    )
     print(f"  rows after downstream filter: {len(de_filtered):,}")
 
     de_filtered.write_csv(args.out)

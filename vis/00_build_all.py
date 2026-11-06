@@ -15,7 +15,8 @@ inputs come from LDSC_DIR / PERM_DIR and outputs go to FIG_DIR.
    comparison (permutation/*deg_filter*) always runs and writes to
    figures/comparison/, outside FIG_DIR.
 3. Copies the chapter outputs into FIG_DIR/{main,supp,data}/ under their
-   figure numbers (MANIFEST below), plus NOTES_overview.md from notes/.
+   figure numbers (MANIFEST below). The hand-written notes/NOTES_*.md are
+   not copied (they describe the earlier deg75 design).
 4. Writes FIG_DIR/INDEX.md and FIG_DIR/contact_sheet.pdf.
 5. Fails if any file in FIG_DIR is not in the index, or vice versa.
 """
@@ -50,8 +51,6 @@ P_COMPARISON = [
 sys.path.insert(0, str(HERE / P))
 from pcommon import MATCHING_INPUTS  # noqa: E402
 
-NOTES_SRC = HERE.parent / "notes" / "NOTES_overview.md"
-NOTES_H_SRC = HERE.parent / "notes" / "NOTES_heritability.md"
 H = "heritability"  # subfolder for the heritability scripts, staging and outputs
 
 RUNS = [
@@ -144,9 +143,12 @@ MANIFEST = [
         "single anchor.",
         caption=(
             "(A, B) Complementary CDFs of out-degree (genes changed per knockdown; n = "
-            "894, 970 and 934 knockdowns at Rest, 8 h and 48 h) and in-degree "
-            "(knockdowns changing a gene; n = 9,544, 9,775 and 9,665 genes); the three "
-            "largest hubs are labelled with the condition in which they occur. (C) "
+            "knockdowns with an effect, overview_numbers.csv regulator_universe) and "
+            "in-degree (knockdowns changing a gene); the three largest hubs are "
+            "labelled with the condition in which they occur. Red points: the "
+            "anchors (union of coloc genes over all traits) on their condition's "
+            "curve; anchors with degree 0 cannot be drawn on the log axis and are "
+            "counted below each panel. (C) "
             "Percentage of reference SNPs in the anchor, regulator and target "
             "annotations: violins (density estimated on the log scale), one point "
             "per disease, black bar at the median "
@@ -398,7 +400,8 @@ DATA = [
         "overview_numbers.csv",
         "overview_numbers.csv",
         "uv run 05_perturbation_graph.py",
-        "Per-condition universe sizes, degree summaries and median coverage.",
+        "Per-condition universe sizes, degree summaries, median coverage, and anchor "
+        "degree counts (> 0) and percentiles (Fig. 2.2A, B).",
     ),
     (
         "Fig. S3",
@@ -464,17 +467,6 @@ DOCS = [
         "One page per figure and table with number, message "
         "and caption, then the full file list.",
     ),
-    (
-        "—",
-        "NOTES_overview.md",
-        "Definitions, checks, measured results, " "interpretation and open questions.",
-    ),
-    (
-        "—",
-        "NOTES_heritability.md",
-        "S-LDSC inventory (Step 0), τ* computation and "
-        "check, measured results, interpretation, not done.",
-    ),
 ]
 
 
@@ -527,8 +519,6 @@ def copy_outputs():
         out = FIG_DIR / "data" / dst
         out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(STAGE / src, out)
-    shutil.copy2(NOTES_SRC, FIG_DIR / "NOTES_overview.md")
-    shutil.copy2(NOTES_H_SRC, FIG_DIR / "NOTES_heritability.md")
 
 
 def index_rows():

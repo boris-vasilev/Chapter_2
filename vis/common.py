@@ -243,32 +243,25 @@ def load_coloc(coloc_path=None):
     )
 
 
-# Edge definition used to build data/gene_sets/coloc (make_gene_sets_coloc.py
-# run by the coloc module with default filters). DE_results_strong.csv was
-# written by extract_de_results.py with: on-target KD, ontarget_significant,
-# n_total_de_genes >= 75, n_cells_target >= 50, padj < 0.05, |zscore| >= 2,
-# cis != trans. The gene-set step adds no |logFC| filter (min_abs_logfc = 0)
-# and no convergence filter (min_reg_k = min_tgt_k = 1). The padj / zscore
-# filters below are re-applied as no-ops to make the definition explicit.
-EDGE_PADJ = 0.05
-EDGE_ABS_Z = 2.0
+# Edge definition used to build the design's gene sets: the pipeline's
+# DE_results.csv (LDSC_DIR/DE_results.csv, written by extract_de_results.py
+# with the design's perturbation and padj / |z| filters), then, as in
+# make_gene_sets_coloc.py, |logFC| >= min_abs_logfc and no self-edges.
 
 
-def load_edges(de_path=None, min_abs_logfc=0.0):
+def load_edges(min_abs_logfc):
     """Perturbation -> response edges exactly as the gene sets use them.
 
-    ``min_abs_logfc`` mirrors make_gene_sets_coloc.py --min-abs-logfc
-    (the ``lfc`` field of VARIANT).
+    Reads LDSC_DIR/DE_results.csv; ``min_abs_logfc`` mirrors
+    make_gene_sets_coloc.py --min-abs-logfc (the ``lfc`` field of VARIANT).
     """
     return (
-        pl.read_csv(de_path or DATA / "DE_results_strong.csv",
+        pl.read_csv(LDSC_DIR / "DE_results.csv",
                     columns=["culture_condition", "cis_ensg", "cis_gene",
-                             "trans_ensg", "trans_gene", "padj", "zscore", "logFC"])
-        .filter(pl.col("padj") < EDGE_PADJ,
-                pl.col("zscore").abs() >= EDGE_ABS_Z,
-                pl.col("logFC").abs() >= min_abs_logfc,
+                             "trans_ensg", "trans_gene", "logFC"])
+        .filter(pl.col("logFC").abs() >= min_abs_logfc,
                 pl.col("cis_ensg") != pl.col("trans_ensg"))
-        .drop("padj", "zscore", "logFC")
+        .drop("logFC")
     )
 
 

@@ -132,14 +132,15 @@ def read_set(path: Path) -> set:
         if path.exists() else set()
 
 
-def recovery(cond: str = "Rest") -> pl.DataFrame:
+def recovery(cond: str = "Rest", perm_root: Path | None = None) -> pl.DataFrame:
     """Fraction of the real regulator / target set recovered by each matched
     permutation: |perm set & real set| / |real set|, from the gene sets in
     PERM_DIR/<study>/perm*/gene_sets (real = permreal). Same columns as the
-    old source_data/matching_check_knn_draws.csv (method "knn")."""
+    old source_data/matching_check_knn_draws.csv (method "knn"). perm_root
+    overrides PERM_DIR (fig_s_deg_filter reads both designs)."""
     rows = []
     for study in dict.fromkeys(s for s, c in RUNS if c == cond):
-        root = HERIT / study
+        root = Path(perm_root or HERIT) / study
         def sets(perm):
             g = root / perm / "gene_sets"
             return (read_set(g / f"{study}_{cond}_regulators_H4.txt"),

@@ -16,8 +16,11 @@ process EXTRACT_DE {
     def on_target = params.on_target ? '--on-target' : '--no-on-target'
     """
     python ${moduleDir}/../bin/extract_de_results.py --h5ad ${h5ad} --out DE_results.csv \
-        --padj-threshold ${params.padj} --z-thresh ${params.min_abs_z} \
-        --min-degs ${params.min_de_genes} --min-cells ${params.min_cells} ${on_target}
+        --padj-threshold ${params.padj} \
+        --z-thresh ${params.min_abs_z} \
+        --min-degs ${params.min_de_genes} \
+        --max-degs-quantile ${params.max_degs_quantile} \
+        --min-cells ${params.min_cells} ${on_target}
     """
 }
 

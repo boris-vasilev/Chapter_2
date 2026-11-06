@@ -7,16 +7,19 @@
   B  real regulator / target set size, deg75 (x) vs nodeg (y); target points
      more than 2x off the diagonal are labelled, and the anchors whose added
      knockdowns cause them are printed
-  C  pseudo-anchor recovery of the real set (median, 95% range), deg75 vs nodeg
-B and C: one point per trait x condition; colour = condition, filled = IMD,
+  C  pseudo-anchor recovery of the real set (median, 95% range), deg75 vs nodeg,
+     computed as for Fig. 5C (pcommon.recovery on each design's permutation
+     gene sets, perm_dir(DESIGNS[...])): one point per permutation run
+B: one point per trait x condition; B and C: colour = condition, filled = IMD,
 open = non-IMD control. Edges are rebuilt with overlap_nodeg.knockdown_edges;
-B and C read overlap_summary.csv.
+B reads overlap_summary.csv.
 
 Compares the two designs, so it does not follow CH2_VARIANT. Inputs are not
 under results/ (left in place): data/DE_stats.suppl_table.csv,
 data/DE_results_sig.csv, data/coloc_dat.tsv and
 data/permutations/overlap_nodeg/overlap_summary.csv (from
-permutation_analysis/scripts/overlap_nodeg.py). The per-design permutation
+permutation_analysis/scripts/overlap_nodeg.py; panel B). Panel C reads both
+designs' results/ldsc_permutation/ folders. The per-design permutation
 results are compared in table_s_deg_filter.py.
 
 Writes fig_s_deg_filter.{pdf,png} to figures/comparison/ and prints the panel A
@@ -39,9 +42,10 @@ from matplotlib.patches import Patch
 
 HERE = Path(__file__).resolve()
 sys.path[:0] = [str(HERE.parents[1]), str(HERE.parents[2] / "permutation_analysis" / "scripts")]
-from common import (COND_COLORS, COND_LABEL, COND_SHORT, CONDS, FIGURES, GROUP_SHORT,  # noqa: E402
-                    PRINT_W, PT, _plain_number, axes_in, panel_label, plain_log_axis,
-                    print_style, save)
+from common import (COND_COLORS, COND_LABEL, COND_SHORT, CONDS, DESIGNS, FIGURES,  # noqa: E402
+                    GROUP_SHORT, PRINT_W, PT, _plain_number, axes_in, panel_label,
+                    perm_dir, plain_log_axis, print_style, save)
+from pcommon import RUNS, recovery  # noqa: E402  (vis/permutation, the script dir)
 from overlap_nodeg import (DATA, MIN_DEGS, OUT, REPO, condition_edges,  # noqa: E402
                            knockdown_edges, load_coloc_genes)
 
@@ -119,6 +123,27 @@ def wide(summary: pl.DataFrame) -> pl.DataFrame:
     return d.join(n, on=keys, suffix="_nodeg")
 
 
+def perm_recovery() -> pl.DataFrame:
+    """Fig. 5C recovery on each design's permutation runs: median and 95% range
+    over permutations per study x condition x set, deg75 and deg0 (suffix
+    _nodeg) side by side, in the layout of wide()."""
+    traits = pl.read_csv(REPO / "vis/diseases.csv").select("trait", "group")
+    sets = {"reg_overlap_frac_of_real": "regulators", "tgt_overlap_frac_of_real": "targets"}
+    out = {}
+    for design in ("deg75", "deg0"):
+        draws = pl.concat(recovery(c, perm_dir(DESIGNS[design])).with_columns(pl.lit(c).alias("condition"))
+                          for c in dict.fromkeys(c for _, c in RUNS))
+        out[design] = (draws.unpivot(index=["study", "condition", "draw"], on=list(sets),
+                                     variable_name="set", value_name="frac")
+                       .with_columns(pl.col("set").replace_strict(sets))
+                       .group_by("study", "condition", "set", maintain_order=True)
+                       .agg(pl.col("frac").median().alias("recovery_median"),
+                            pl.col("frac").quantile(0.025, "linear").alias("recovery_q025"),
+                            pl.col("frac").quantile(0.975, "linear").alias("recovery_q975")))
+    return (out["deg75"].join(out["deg0"], on=["study", "condition", "set"], suffix="_nodeg")
+            .join(traits, left_on="study", right_on="trait"))
+
+
 def off_diagonal(w: pl.DataFrame, edges: pl.DataFrame, symbols: dict) -> pl.DataFrame:
     """Target points > OFF_DIAGONAL x off the diagonal, with the anchors whose
     added knockdowns contribute the targets that only nodeg has."""
@@ -142,6 +167,7 @@ def off_diagonal(w: pl.DataFrame, edges: pl.DataFrame, symbols: dict) -> pl.Data
 def main() -> None:
     edges, symbols = load_edges()
     w = wide(pl.read_csv(OUT / "overlap_summary.csv"))
+    rec = perm_recovery()
     counts = (edges.group_by("condition", "kind")
                    .agg(pl.col("cis_ensg").n_unique().alias("knockdowns"), pl.len().alias("edges")))
     deg = edges.group_by("condition", "kind", "cis_ensg").len("out_degree")
@@ -175,7 +201,7 @@ def main() -> None:
         panel_label(fig, 0.05, 2.45, "C", "Pseudo-anchor recovery of the real set")
         for i, s in enumerate(SETS):
             ax = axes_in(fig, 0.62 + i * 2.05, 0.4, 1.65, 1.65)
-            sub = w.filter(pl.col("set") == s).drop_nulls("recovery_median")
+            sub = rec.filter(pl.col("set") == s).drop_nulls("recovery_median")
             scatter(ax, sub, "recovery_median", "recovery_median_nodeg",
                     ("recovery_q025", "recovery_q975"), ("recovery_q025_nodeg", "recovery_q975_nodeg"))
             diagonal(ax, 0, 1)
@@ -206,6 +232,9 @@ def main() -> None:
         print(flags.select("abbrev", "condition", "real_size", "real_size_nodeg", "anchor", "symbol",
                            "anchor_out_degree", "new_targets_from_anchor", "new_targets_total")
               if flags.height else "none")
+        print("Panel C: recovery of the real set (median, 95% range), deg75 vs deg0")
+        print(rec.select("study", "condition", "set", *(pl.col(c).round(3) for c in rec.columns
+                                                         if c.startswith("recovery"))))
     zero = w.filter((pl.col("real_size") == 0) | (pl.col("real_size_nodeg") == 0))
     print(f"Panel B omits {zero.height} trait x condition x set rows with an empty real set")
 

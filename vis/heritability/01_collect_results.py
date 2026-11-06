@@ -37,8 +37,8 @@ import pandas as pd
 from scipy.stats import norm, t as tdist
 from statsmodels.stats.multitest import multipletests
 
-from hcommon import (DROPPED, EMPTY, FAILED, FDR, FITTED, H_ANNOTS, LONG_CSV, NOT_RUN,
-                     add_args, load_diseases, resolve)
+from hcommon import (EMPTY, FAILED, FDR, FITTED, H_ANNOTS, LONG_CSV, NOT_RUN,
+                     add_args, dropped_status, load_diseases, resolve)
 from common import CONDS, load_gene_sets
 
 # Runs where only one custom annotation survived combine_annots.py
@@ -157,7 +157,7 @@ def collect(ldsc_dir, sets, diseases):
                 elif n == 0:
                     row["status"] = EMPTY
                 elif run["status"] == "results":
-                    row["status"] = DROPPED
+                    row["status"] = dropped_status(d / f"{cond}_combined.combine.txt", annot)
                 else:
                     row["status"] = FAILED if run["status"] == "run failed" else NOT_RUN
                 rows.append(row)

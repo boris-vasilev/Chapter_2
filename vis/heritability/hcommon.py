@@ -5,6 +5,7 @@ chapter 2 figures, and defines the annotation order, labels and the loader
 for the tidy table written by 01_collect_results.py.
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -32,8 +33,20 @@ LONG_CSV = "heritability_long.csv"
 FITTED = "fitted"
 EMPTY = "empty set"
 DROPPED = "dropped (< 1,000 SNPs)"
+DROPPED_GENES = "dropped (< 3 genes)"
 FAILED = "run failed"
 NOT_RUN = "not run"
+
+
+def dropped_status(combine_txt, annot):
+    """Why combine_annots.py dropped ``annot``, from its [DROP] line in
+    <cond>_combined.combine.txt ("[DROP] <annot>: <n> SNPs, <k> genes").
+    A set with enough SNPs was dropped by the gene rule; anything else
+    (too few SNPs, or an older combine.txt with no gene count) is DROPPED."""
+    m = re.search(rf"\[DROP\] {annot}: (\d+) SNPs, (\d+) genes",
+                  combine_txt.read_text()) if combine_txt.exists() else None
+    min_snps = int(re.search(r"_snp(\d+)", VARIANT).group(1))
+    return DROPPED_GENES if m and int(m.group(1)) >= min_snps else DROPPED
 
 
 def add_args(ap):
