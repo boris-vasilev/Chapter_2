@@ -45,8 +45,8 @@ def perm_dir(variant):
 
 LDSC_DIR = ldsc_dir(VARIANT)
 PERM_DIR = perm_dir(VARIANT)
-FIGURES2 = ROOT / "figures2"
-FIG_DIR = FIGURES2 / VARIANT.split("_")[0]   # temporary, e.g. figures2/deg75/
+FIGURES = ROOT / "figures"
+FIG_DIR = FIGURES / VARIANT.split("_")[0]   # e.g. figures/deg0/
 BUILD_DIR = ROOT / "build" / VARIANT                  # staging, copied into FIG_DIR
 
 CONDS = ["Rest", "Stim8hr", "Stim48hr"]

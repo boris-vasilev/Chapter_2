@@ -9,7 +9,7 @@ target rows). Reads summary_all.csv from both designs' permutation folders
 (common.DESIGNS / perm_dir; not CH2_VARIANT). A design with no permutation
 results gets empty columns and a note under the table.
 
-Writes figures2/comparison/table_s_deg_filter.{csv,tex}. As for Table 2.1, the
+Writes figures/comparison/table_s_deg_filter.{csv,tex}. As for Table 2.1, the
 .tex is a complete table float (caption + \\label{tab:deg_filter_perm}); needs
 \\usepackage{booktabs,tabularx}.
 
@@ -23,9 +23,9 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import COND_LABEL, CONDS, DESIGNS, FIGURES2, load_diseases, perm_dir  # noqa: E402
+from common import COND_LABEL, CONDS, DESIGNS, FIGURES, load_diseases, perm_dir  # noqa: E402
 
-OUT = FIGURES2 / "comparison"
+OUT = FIGURES / "comparison"
 SETS = ["regulators", "targets"]
 SET_LABEL = {"regulators": "Regulators", "targets": "Targets"}
 DESIGN_LABEL = {"deg0": "No DEG filter (deg0)", "deg75": r"$\geq$ 75 DEGs (deg75)"}

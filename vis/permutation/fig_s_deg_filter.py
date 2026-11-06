@@ -19,7 +19,7 @@ data/permutations/overlap_nodeg/overlap_summary.csv (from
 permutation_analysis/scripts/overlap_nodeg.py). The per-design permutation
 results are compared in table_s_deg_filter.py.
 
-Writes fig_s_deg_filter.{pdf,png} to figures2/comparison/ and prints the panel A
+Writes fig_s_deg_filter.{pdf,png} to figures/comparison/ and prints the panel A
 numbers, the median out-degree of deg75 vs added knockdowns, and the labelled
 panel B points with their causal anchors.
 
@@ -39,7 +39,7 @@ from matplotlib.patches import Patch
 
 HERE = Path(__file__).resolve()
 sys.path[:0] = [str(HERE.parents[1]), str(HERE.parents[2] / "permutation_analysis" / "scripts")]
-from common import (COND_COLORS, COND_LABEL, COND_SHORT, CONDS, FIGURES2, GROUP_SHORT,  # noqa: E402
+from common import (COND_COLORS, COND_LABEL, COND_SHORT, CONDS, FIGURES, GROUP_SHORT,  # noqa: E402
                     PRINT_W, PT, _plain_number, axes_in, panel_label, plain_log_axis,
                     print_style, save)
 from overlap_nodeg import (DATA, MIN_DEGS, OUT, REPO, condition_edges,  # noqa: E402
@@ -49,7 +49,7 @@ SETS = ["regulators", "targets"]
 SET_LABEL = {"regulators": "Regulators", "targets": "Targets"}
 GROUP_FILLED = {"IMD": True, "non-IMD": False}  # filled vs open marker
 KINDS = {"deg75": "≥ 75 DEGs", "added": "Added without filter"}
-COMPARISON_DIR = FIGURES2 / "comparison"
+COMPARISON_DIR = FIGURES / "comparison"
 OFF_DIAGONAL = 2.0  # label target points with nodeg / deg75 size beyond this factor
 
 
