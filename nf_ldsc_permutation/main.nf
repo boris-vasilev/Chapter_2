@@ -27,10 +27,12 @@ workflow {
     def missing = (wanted - params.runs.keySet()) + (runs.keySet() - rows*.study)
     if (missing) error "Not in params.runs or ${params.study_info}: ${missing.join(', ')}"
 
+    if (params.hub_annot_quantile != null) error "hub annotation not supported in permutations"
+
     // params.de_results reuses an existing table and skips extraction (which
     // publishes to the main pipeline's outdir, where it can be reused later).
     de = params.de_results ? channel.value(file(ws(params.de_results)))
-                           : EXTRACT_DE(file(ws(params.de_h5ad)))
+                           : EXTRACT_DE(file(ws(params.de_h5ad))).de
     expression = BUILD_EXPRESSION(file(ws(params.de_h5ad)))
 
     jobs = channel.fromList(rows.collectMany { r ->

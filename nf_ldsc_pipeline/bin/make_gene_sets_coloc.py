@@ -59,6 +59,14 @@ def main():
         "Default 0.0 - no filter (current behaviour). Used by the "
         "stringency sensitivity sweep.",
     )
+
+    parser.add_argument(
+        "--hubs",
+        default=None,
+        help="Hub list from extract_de_results.py --hub-list-out. If given, also "
+        "write a trait-agnostic 'hubs' set per study and condition (identical across studies).",
+    )
+
     parser.add_argument("--out-dir", required=True)
     args = parser.parse_args()
 
@@ -66,6 +74,8 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     de_dat = pl.read_csv(args.de_results)
+    hubs = pl.read_csv(args.hubs) if args.hubs else None
+
     if args.min_abs_logfc > 0:
         n0 = de_dat.height
         de_dat = de_dat.filter(pl.col("logFC").abs() >= args.min_abs_logfc)
@@ -141,6 +151,11 @@ def main():
             )
             sets[(study, condition, "H4_genes")] = h4_genes.unique()
 
+            if hubs is not None:
+                sets[(study, condition, "hubs")] = hubs.filter(
+                    pl.col("culture_condition") == condition
+                )["cis_ensg"].unique()
+
             if not args.h4_only:
                 sets[(study, condition, "regulators_H3")] = convergent_regulators(
                     perturb, h3_genes, min_reg_k
@@ -157,7 +172,7 @@ def main():
     )
     for (study, condition, annot), genes in sets.items():
         fname = f"{study}_{condition}_{annot}.txt"
-        pl.DataFrame({"GENE": genes}).write_csv(
+        pl.DataFrame({"GENE": genes}).sort("GENE").write_csv(
             out_dir / fname, separator="\t", include_header=False
         )
         print(f"  {fname}\t{len(genes)} genes", file=sys.stderr)

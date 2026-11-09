@@ -10,16 +10,30 @@ workflow {
     def wanted = params.studies ? params.studies.tokenize(',') : null
     def outdir = "${params.outdir}/${variant()}"
     def study_info = file(ws(params.study_info))
+    def hub_annot = params.hub_annot_quantile != null
 
     studies = channel.fromPath(study_info)
         .splitCsv(header: true)
         .filter { row -> !wanted || row.study in wanted }
 
-    // params.de_results reuses an existing table and skips extraction.
-    de = params.de_results ? channel.value(file(ws(params.de_results)))
-                           : EXTRACT_DE(file(ws(params.de_h5ad)))
+    // params.de_results reuses an existing table and skips extraction. The hub
+    // list needs extraction: hubs are ranked before any edge filtering.
+    if (params.de_results && hub_annot)
+        error "--hub_annot_quantile needs EXTRACT_DE; don't combine it with --de_results"
+    if (hub_annot && (params.max_degs_quantile as BigDecimal) < 1)
+        error "--hub_annot_quantile annotates hubs; don't combine it with hub exclusion (--max_degs_quantile < 1)"
+    if (params.de_results) {
+        de = channel.value(file(ws(params.de_results)))
+    } else {
+        extract = EXTRACT_DE(file(ws(params.de_h5ad)))
+        de = extract.de
+    }
+    // Hub list for the trait-agnostic annotation, or a placeholder when it is off.
+    hubs = hub_annot ? extract.hubs.ifEmpty { error "EXTRACT_DE wrote no hubs.csv" }
+                     : channel.value(file("${projectDir}/assets/NO_FILE"))
 
-    MAKE_GENE_SETS(de, file(ws(params.coloc_dat)), studies.map { row -> row.study }.collect(), conditions)
+    MAKE_GENE_SETS(de, file(ws(params.coloc_dat)), studies.map { row -> row.study }.collect(),
+                   conditions, hubs)
     MUNGE_SUMSTATS(studies, study_info)
 
     // One chain per study x condition. Paths in meta decide the published layout.

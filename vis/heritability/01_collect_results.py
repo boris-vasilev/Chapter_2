@@ -19,8 +19,8 @@ SE(tau*) = SE(tau) * sd(a) * M / h2g (h2g and M treated as fixed); the
 tau* p-value is one-sided (H1: tau* > 0), p = Phi(-z) with z = tau / SE(tau);
 the two-sided p and its FDR are kept as *_two_sided columns.
 
-FDR: Benjamini-Hochberg within two families, expanded sets (regulators +
-targets) and anchors, separately for enrichment and tau*. Sets with negative
+FDR: Benjamini-Hochberg within three families, expanded sets (regulators +
+targets), anchors and hubs (runs with --hub_annot_quantile), separately for enrichment and tau*. Sets with negative
 Prop._h2 are flagged (neg_prop_h2) and never called significant
 (*_sig columns).
 
@@ -133,7 +133,9 @@ def collect(ldsc_dir, sets, diseases):
                 fitted = {}
             runs.append(run)
 
-            for annot in H_ANNOTS:
+            for annot in H_ANNOTS + ["hubs"]:
+                if annot == "hubs" and annot not in fitted and (study, cond, annot) not in sets:
+                    continue  # run without the hub annotation
                 n = len(sets.get((study, cond, annot), ()))
                 row = {"study": study, "condition": cond, "annot": annot, "n_genes": n,
                        "ld_reference": panel}
@@ -165,10 +167,11 @@ def collect(ldsc_dir, sets, diseases):
 
 
 def add_fdr(df):
-    """BH within two families - expanded sets (regulators + targets) and
-    anchors - separately for enrichment and tau*. Estimates with negative
+    """BH within three families - expanded sets (regulators + targets),
+    anchors and hubs - separately for enrichment and tau*. Estimates with negative
     Prop._h2 stay in the correction but are never called significant."""
-    df["fdr_family"] = np.where(df["annot"] == "H4_genes", "anchors", "expanded")
+    df["fdr_family"] = np.select([df["annot"] == "H4_genes", df["annot"] == "hubs"],
+                                 ["anchors", "hubs"], "expanded")
     df["neg_prop_h2"] = df["prop_h2"] < 0
     for p_col, q_col in [("enrichment_p", "enrichment_fdr"), ("tau_star_p", "tau_star_fdr"),
                          ("tau_star_p_two_sided", "tau_star_fdr_two_sided")]:

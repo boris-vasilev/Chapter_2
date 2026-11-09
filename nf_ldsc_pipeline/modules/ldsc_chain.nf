@@ -30,7 +30,7 @@ process LDSC_CHAIN {
     script:
     def r = refs(meta)
     def bin = "${moduleDir}/../bin"
-    def annots = 'regulators_H4 targets_H4 H4_genes'
+    def annots = 'regulators_H4 targets_H4 H4_genes' + (params.hub_annot_quantile != null ? ' hubs' : '')
     def gene_files = annots.tokenize().collect { "'${gene_sets}/${meta.study}_${meta.cond}_${it}.txt'" }.join(' ')
     def ld = "${meta.ld_dir}/${meta.cond}_combined"
     def out = "${meta.res_dir}/${meta.cond}_combined"

@@ -202,7 +202,7 @@ def read_gene_set(path):
 def load_gene_sets(gene_sets_dir=None):
     """dict[(study, cond, annot)] = set of Ensembl ids."""
     gene_sets_dir = Path(gene_sets_dir or LDSC_DIR / "gene_sets")
-    annot_re = "|".join(sorted(ANNOTS, key=len, reverse=True))
+    annot_re = "|".join(sorted(ANNOTS + ["hubs"], key=len, reverse=True))
     pat = re.compile(rf"^(?P<study>.+)_(?P<cond>[^_]+)_(?P<annot>{annot_re})\.txt$")
     sets = {}
     for p in sorted(gene_sets_dir.glob("*.txt")):

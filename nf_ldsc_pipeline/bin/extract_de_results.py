@@ -14,6 +14,22 @@ import polars as pl
 import scanpy as sc
 
 
+def hub_mask(mask, n_degs, cond, genes, q, label):
+    """Perturbations above the q-quantile of n_total_de_genes within their
+    culture_condition, among those passing `mask`."""
+    hub = np.zeros_like(mask)
+    print(f"  {label} (q={q}, per culture_condition):")
+    for c in np.unique(cond[mask]):
+        in_c = mask & (cond == c)
+        cutoff = np.quantile(n_degs[in_c], q)
+        hub_c = in_c & (n_degs > cutoff)
+        hub |= hub_c
+        print(
+            f"    {c}: cutoff {cutoff:.0f} DEGs, {hub_c.sum()} / {in_c.sum()} obs: {sorted(genes[hub_c])}"
+        )
+    return hub
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--h5ad", required=True)
@@ -34,6 +50,16 @@ def main():
         help="Maximum quantile of n_total_de_genes to keep. For dropping out-hubs with a large number of DEGs, set to a value < 1.0."
         "(default 1.0, keeping all).",
     )
+
+    parser.add_argument(
+        "--hub-list-quantile",
+        type=float,
+        default=None,
+        help="If set, write the perturbations above this quantile of n_total_de_genes "
+        "(per culture_condition, same rule as --max-degs-quantile) to --hub-list-out. "
+        "They stay in the DE table; this only lists them.",
+    )
+    parser.add_argument("--hub-list-out", default="hubs.csv")
 
     parser.add_argument(
         "--min-cells",
@@ -70,22 +96,21 @@ def main():
     mask &= (adata.obs["n_cells_target"] >= args.min_cells).to_numpy()
 
     # Drop perturbations with a large number of DEGs (hubs) per culture_condition.
-    q = args.max_degs_quantile
     n_degs = adata.obs["n_total_de_genes"].to_numpy()
     cond = adata.obs["culture_condition"].astype(str).to_numpy()
     genes = adata.obs["target_contrast_gene_name"].astype(str).to_numpy()
-    hub = np.zeros_like(mask)
-    print(f"  hub filter (q={q}, per culture_condition):")
-    for c in np.unique(cond[mask]):
-        in_c = mask & (cond == c)
-        cutoff = np.quantile(n_degs[in_c], q)
-        hub_c = in_c & (n_degs > cutoff)
-        hub |= hub_c
-        print(
-            f"    {c}: cutoff {cutoff:.0f} DEGs, "
-            f"dropping {hub_c.sum()} / {in_c.sum()} obs: {sorted(genes[hub_c])}"
-        )
-    mask &= ~hub
+
+    # Hub list for the trait-agnostic annotation: ranked on the same population
+    # as the exclusion below, before any hubs are dropped.
+    if args.hub_list_quantile is not None:
+        listed = hub_mask(mask, n_degs, cond, genes, args.hub_list_quantile, "hub list")
+        ensg = adata.obs["target_contrast"].astype(str).to_numpy()
+        pl.DataFrame(
+            {"culture_condition": cond[listed], "cis_ensg": ensg[listed]}
+        ).write_csv(args.hub_list_out)
+
+    # Drop hubs from the graph (hub exclusion; q = 1 keeps all).
+    mask &= ~hub_mask(mask, n_degs, cond, genes, args.max_degs_quantile, "hub filter")
 
     print(f"  after effective perturbation and hub filter: {mask.sum()} obs")
 

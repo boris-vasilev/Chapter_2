@@ -2,7 +2,8 @@
 
 include { ws; variant } from './refs'
 
-// Filter the DE h5ad. In: h5ad. Out: DE_results.csv (one row per kept edge).
+// Filter the DE h5ad. In: h5ad. Out: DE_results.csv (one row per kept edge) and,
+// if hub_annot_quantile is set, hubs.csv (the trait-agnostic hub list).
 process EXTRACT_DE {
     publishDir "${params.outdir}/${variant()}", mode: 'copy'
 
@@ -10,22 +11,26 @@ process EXTRACT_DE {
     path h5ad
 
     output:
-    path 'DE_results.csv'
+    path 'DE_results.csv', emit: de
+    path 'hubs.csv', optional: true, emit: hubs
 
     script:
     def on_target = params.on_target ? '--on-target' : '--no-on-target'
+    def hub_list = params.hub_annot_quantile != null ?
+        "--hub-list-quantile ${params.hub_annot_quantile} --hub-list-out hubs.csv" : ''
     """
     python ${moduleDir}/../bin/extract_de_results.py --h5ad ${h5ad} --out DE_results.csv \
         --padj-threshold ${params.padj} \
         --z-thresh ${params.min_abs_z} \
         --min-degs ${params.min_de_genes} \
         --max-degs-quantile ${params.max_degs_quantile} \
-        --min-cells ${params.min_cells} ${on_target}
+        --min-cells ${params.min_cells} ${on_target} ${hub_list}
     """
 }
 
-// Regulator, target and anchor sets. In: DE table, coloc table, study and
-// condition lists. Out: gene_sets/{study}_{cond}_{annot}.txt.
+// Regulator, target, anchor (and optionally hub) sets. In: DE table, coloc table,
+// study and condition lists, hub list or assets/NO_FILE.
+// Out: gene_sets/{study}_{cond}_{annot}.txt.
 process MAKE_GENE_SETS {
     publishDir "${params.outdir}/${variant()}", mode: 'copy'
 
@@ -34,11 +39,13 @@ process MAKE_GENE_SETS {
     path coloc
     val studies
     val conditions
+    path hubs        // hub list, or the NO_FILE placeholder when hub_annot_quantile is unset
 
     output:
     path 'gene_sets'
 
     script:
+    def hub_opt = hubs.name != 'NO_FILE' ? "--hubs ${hubs}" : ''
     """
     python ${moduleDir}/../bin/make_gene_sets_coloc.py \
         --de-results ${de} --coloc ${coloc} \
@@ -47,7 +54,7 @@ process MAKE_GENE_SETS {
         --cell-type ${params.cell_type} --h4-threshold ${params.h4_threshold} \
         --min-anchors-per-regulator ${params.min_reg_k} \
         --min-perturbations-per-target ${params.min_tgt_k} \
-        --min-abs-logfc ${params.min_abs_logfc} --h4-only --out-dir gene_sets
+        --min-abs-logfc ${params.min_abs_logfc} --h4-only --out-dir gene_sets ${hub_opt}
     """
 }
 

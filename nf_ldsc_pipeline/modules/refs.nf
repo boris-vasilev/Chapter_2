@@ -18,9 +18,12 @@ def refs(row) {
       frq:        ws(params.allele_frq[key]) ]
 }
 
-// Output folder name, derived from every filter so that runs cannot collide.
+// Output folder name: every setting that changes the gene sets.
 def variant() {
-    "hub${params.max_degs_quantile}_deg${params.min_de_genes}_cells${params.min_cells}_ot${params.on_target ? 1 : 0}" +
+    def q   = params.max_degs_quantile
+    def hub = (q as BigDecimal) < 1 ? "hub${q}_" : ''
+    def ann = params.hub_annot_quantile != null ? "_hubannot${params.hub_annot_quantile}" : ''
+    "${hub}deg${params.min_de_genes}_cells${params.min_cells}_ot${params.on_target ? 1 : 0}" +
     "_p${params.padj}_z${params.min_abs_z}_lfc${params.min_abs_logfc}_h4${params.h4_threshold}" +
-    "_k${params.min_reg_k}-${params.min_tgt_k}_w${params.window_size}_snp${params.min_snps_per_annot}"
+    "_k${params.min_reg_k}-${params.min_tgt_k}_w${params.window_size}_snp${params.min_snps_per_annot}${ann}"
 }
