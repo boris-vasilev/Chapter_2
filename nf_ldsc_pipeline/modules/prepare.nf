@@ -1,6 +1,6 @@
 // DE table, gene sets and munged sumstats: the inputs to LDSC_CHAIN.
 
-include { ws; variant } from './refs'
+include { ws; variant; hub_quantiles } from './refs'
 
 // Filter the DE h5ad. In: h5ad. Out: DE_results.csv (one row per kept edge) and,
 // if hub_annot_quantile is set, hubs.csv (the trait-agnostic hub list).
@@ -17,7 +17,7 @@ process EXTRACT_DE {
     script:
     def on_target = params.on_target ? '--on-target' : '--no-on-target'
     def hub_list = params.hub_annot_quantile != null ?
-        "--hub-list-quantile ${params.hub_annot_quantile} --hub-list-out hubs.csv" : ''
+        "--hub-list-quantile ${hub_quantiles().join(' ')} --hub-list-out hubs.csv" : ''
     """
     python ${moduleDir}/../bin/extract_de_results.py --h5ad ${h5ad} --out DE_results.csv \
         --padj-threshold ${params.padj} \

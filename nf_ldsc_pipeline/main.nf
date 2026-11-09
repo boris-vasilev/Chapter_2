@@ -3,7 +3,7 @@
 
 include { EXTRACT_DE; MAKE_GENE_SETS; MUNGE_SUMSTATS } from './modules/prepare'
 include { LDSC_CHAIN } from './modules/ldsc_chain'
-include { ws; variant } from './modules/refs'
+include { ws; variant; hub_quantiles } from './modules/refs'
 
 workflow {
     def conditions = params.conditions.tokenize(',')
@@ -22,6 +22,11 @@ workflow {
         error "--hub_annot_quantile needs EXTRACT_DE; don't combine it with --de_results"
     if (hub_annot && (params.max_degs_quantile as BigDecimal) < 1)
         error "--hub_annot_quantile annotates hubs; don't combine it with hub exclusion (--max_degs_quantile < 1)"
+    def hub_qs = hub_quantiles()
+    if (hub_annot && !hub_qs.every { q -> q.isBigDecimal() && (q as BigDecimal) > 0 && (q as BigDecimal) < 1 })
+        error "--hub_annot_quantile: every quantile must be a number in (0, 1), got '${params.hub_annot_quantile}'"
+    if (hub_annot && (0..<hub_qs.size() - 1).any { i -> (hub_qs[i] as BigDecimal) >= (hub_qs[i + 1] as BigDecimal) })
+        error "--hub_annot_quantile: quantiles must be strictly increasing, got '${params.hub_annot_quantile}'"
     if (params.de_results) {
         de = channel.value(file(ws(params.de_results)))
     } else {

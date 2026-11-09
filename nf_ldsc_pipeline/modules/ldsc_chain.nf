@@ -8,7 +8,7 @@
 // Out: {res_dir}/{cond}_combined.{log,results,cov}, combine.txt (sets kept),
 //      and LD scores under {ld_dir} when params.keep_ld is set.
 
-include { refs } from './refs'
+include { refs; hub_annots } from './refs'
 
 process LDSC_CHAIN {
     tag "${meta.study} ${meta.cond}"
@@ -30,7 +30,7 @@ process LDSC_CHAIN {
     script:
     def r = refs(meta)
     def bin = "${moduleDir}/../bin"
-    def annots = 'regulators_H4 targets_H4 H4_genes' + (params.hub_annot_quantile != null ? ' hubs' : '')
+    def annots = (['regulators_H4', 'targets_H4', 'H4_genes'] + hub_annots()).join(' ')
     def gene_files = annots.tokenize().collect { "'${gene_sets}/${meta.study}_${meta.cond}_${it}.txt'" }.join(' ')
     def ld = "${meta.ld_dir}/${meta.cond}_combined"
     def out = "${meta.res_dir}/${meta.cond}_combined"

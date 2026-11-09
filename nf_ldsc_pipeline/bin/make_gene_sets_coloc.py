@@ -64,7 +64,8 @@ def main():
         "--hubs",
         default=None,
         help="Hub list from extract_de_results.py --hub-list-out. If given, also "
-        "write a trait-agnostic 'hubs' set per study and condition (identical across studies).",
+        "write a trait-agnostic 'hubs' set per study and condition (identical across studies); "
+        "with several quantiles, one 'hubs_q<quantile>' set per quantile.",
     )
 
     parser.add_argument("--out-dir", required=True)
@@ -74,7 +75,11 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     de_dat = pl.read_csv(args.de_results)
-    hubs = pl.read_csv(args.hubs) if args.hubs else None
+    # All columns as strings: the quantile names files exactly as given (0.90, not 0.9).
+    hubs = pl.read_csv(args.hubs, infer_schema=False) if args.hubs else None
+    if hubs is not None and "quantile" not in hubs.columns:  # older single-quantile list
+        hubs = hubs.with_columns(pl.lit("").alias("quantile"))
+    hub_qs = hubs["quantile"].unique(maintain_order=True).to_list() if hubs is not None else []
 
     if args.min_abs_logfc > 0:
         n0 = de_dat.height
@@ -151,9 +156,10 @@ def main():
             )
             sets[(study, condition, "H4_genes")] = h4_genes.unique()
 
-            if hubs is not None:
-                sets[(study, condition, "hubs")] = hubs.filter(
-                    pl.col("culture_condition") == condition
+            for q in hub_qs:
+                name = "hubs" if len(hub_qs) == 1 else f"hubs_q{q}"
+                sets[(study, condition, name)] = hubs.filter(
+                    (pl.col("culture_condition") == condition) & (pl.col("quantile") == q)
                 )["cis_ensg"].unique()
 
             if not args.h4_only:

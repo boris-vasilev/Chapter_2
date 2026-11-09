@@ -133,9 +133,11 @@ def collect(ldsc_dir, sets, diseases):
                 fitted = {}
             runs.append(run)
 
-            for annot in H_ANNOTS + ["hubs"]:
-                if annot == "hubs" and annot not in fitted and (study, cond, annot) not in sets:
-                    continue  # run without the hub annotation
+            # Hub annotations ('hubs', or 'hubs_q<q>' per quantile) present in this run.
+            hub_annots = sorted({a for a in fitted if a.startswith("hubs")}
+                                | {a for (s, c, a) in sets if s == study and c == cond
+                                   and a.startswith("hubs")})
+            for annot in H_ANNOTS + hub_annots:
                 n = len(sets.get((study, cond, annot), ()))
                 row = {"study": study, "condition": cond, "annot": annot, "n_genes": n,
                        "ld_reference": panel}
@@ -170,7 +172,7 @@ def add_fdr(df):
     """BH within three families - expanded sets (regulators + targets),
     anchors and hubs - separately for enrichment and tau*. Estimates with negative
     Prop._h2 stay in the correction but are never called significant."""
-    df["fdr_family"] = np.select([df["annot"] == "H4_genes", df["annot"] == "hubs"],
+    df["fdr_family"] = np.select([df["annot"] == "H4_genes", df["annot"].str.startswith("hubs")],
                                  ["anchors", "hubs"], "expanded")
     df["neg_prop_h2"] = df["prop_h2"] < 0
     for p_col, q_col in [("enrichment_p", "enrichment_fdr"), ("tau_star_p", "tau_star_fdr"),

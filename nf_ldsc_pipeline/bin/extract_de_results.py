@@ -53,10 +53,11 @@ def main():
 
     parser.add_argument(
         "--hub-list-quantile",
-        type=float,
+        nargs="+",
         default=None,
-        help="If set, write the perturbations above this quantile of n_total_de_genes "
-        "(per culture_condition, same rule as --max-degs-quantile) to --hub-list-out. "
+        help="If set, write the perturbations above each of these quantiles of "
+        "n_total_de_genes (per culture_condition, same rule as --max-degs-quantile) "
+        "to --hub-list-out, one block per quantile (quantile column kept as given). "
         "They stay in the DE table; this only lists them.",
     )
     parser.add_argument("--hub-list-out", default="hubs.csv")
@@ -103,11 +104,15 @@ def main():
     # Hub list for the trait-agnostic annotation: ranked on the same population
     # as the exclusion below, before any hubs are dropped.
     if args.hub_list_quantile is not None:
-        listed = hub_mask(mask, n_degs, cond, genes, args.hub_list_quantile, "hub list")
         ensg = adata.obs["target_contrast"].astype(str).to_numpy()
-        pl.DataFrame(
-            {"culture_condition": cond[listed], "cis_ensg": ensg[listed]}
-        ).write_csv(args.hub_list_out)
+        blocks = []
+        for q in args.hub_list_quantile:
+            listed = hub_mask(mask, n_degs, cond, genes, float(q), "hub list")
+            blocks.append(
+                pl.DataFrame({"culture_condition": cond[listed], "cis_ensg": ensg[listed]})
+                .with_columns(pl.lit(q).alias("quantile"))
+            )
+        pl.concat(blocks).write_csv(args.hub_list_out)
 
     # Drop hubs from the graph (hub exclusion; q = 1 keeps all).
     mask &= ~hub_mask(mask, n_degs, cond, genes, args.max_degs_quantile, "hub filter")
