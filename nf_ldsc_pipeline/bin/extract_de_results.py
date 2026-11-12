@@ -13,21 +13,7 @@ import numpy as np
 import polars as pl
 import scanpy as sc
 
-
-def hub_mask(mask, n_degs, cond, genes, q, label):
-    """Perturbations above the q-quantile of n_total_de_genes within their
-    culture_condition, among those passing `mask`."""
-    hub = np.zeros_like(mask)
-    print(f"  {label} (q={q}, per culture_condition):")
-    for c in np.unique(cond[mask]):
-        in_c = mask & (cond == c)
-        cutoff = np.quantile(n_degs[in_c], q)
-        hub_c = in_c & (n_degs > cutoff)
-        hub |= hub_c
-        print(
-            f"    {c}: cutoff {cutoff:.0f} DEGs, {hub_c.sum()} / {in_c.sum()} obs: {sorted(genes[hub_c])}"
-        )
-    return hub
+from hubs import hub_mask
 
 
 def main():
